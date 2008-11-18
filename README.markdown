@@ -27,8 +27,8 @@ with a base "dc=example,dc=com" we get a DN like the user 'admin'
 
     uid=admin,ou=people,dc=example,dc=com
 
-ldap entries are be bigger than the model
------------------------------------------
+ldap entities are bigger than the model
+---------------------------------------
 
 for example the ldap posixGroup has more attributes than the model class, it needs the 'objectclass' attribute set to 'posixGroup'.
 
@@ -41,7 +41,7 @@ for example the ldap posixGroup has more attributes than the model class, it nee
       ldap_properties {{ :objectclass => "posixGroup"}}
     end
 
-so with the help of the ldap_properties you can define a block which returns an hash with extra attributes. with block like this you can make some calculations if needed.
+so with the help of the ldap_properties you can define a block which returns an hash with extra attributes. with such block you can make some calculations if needed, i.e. :homedirectory => "/home/#{login}" for the posixAccount.
 
 authentication
 --------------
@@ -56,15 +56,19 @@ just a list of what is working with that ldap adapter and the usual AND between 
 * :eql
 * :not
 * :like
-* Range
 * :in
+* Range
 
 not working are :lt, :lte, :gt, :gte
 
 note: sql handles NULL different from values, i.e.
+
      select * from users where name = 'sd';
+
 end
+
      select * from users where name != 'sd';
+
 gives the same result when all names are NULL !!!
 
 multiple repositories
