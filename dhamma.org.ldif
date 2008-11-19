@@ -1,0 +1,73 @@
+dn: dc=org
+objectClass: dcObject
+objectClass: organizationalUnit
+dc: org
+ou: Org
+
+dn: dc=dhamma,dc=org
+objectClass: dcObject
+objectClass: organizationalUnit
+dc: dhamma
+ou: Dhamma
+
+dn: dc=referral,dc=dhamma,dc=org
+objectClass: dcObject
+objectClass: organizationalUnit
+dc: referral
+ou: Referral
+
+dn: ou=people,dc=dhamma,dc=org
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=dhamma,dc=org
+objectClass: organizationalUnit
+ou: groups
+
+dn: ou=groups,dc=referral,dc=dhamma,dc=org
+objectClass: organizationalUnit
+ou: groups
+
+dn: uid=kristian,ou=people,dc=dhamma,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+uid: kristian
+sn: Meier
+givenName: Kristian
+cn: Kristian Meier
+uidNumber: 1000
+gidNumber: 10000
+userPassword: {SSHA}/o6oa2GOphls/lzOFCwVkw9ARWEEiw+x
+mail: m.kristian@web.de
+loginShell: /bin/false
+homeDirectory: 
+
+dn: cn=dhammaworker,ou=groups,dc=dhamma,dc=org
+objectClass: posixGroup
+cn: dhammaworker
+gidNumber: 10000
+
+dn: cn=root,ou=groups,dc=referral,dc=dhamma,dc=org
+objectClass: posixGroup
+cn: root
+memberUid: kristian
+gidNumber: 10001
+
+dn: cn=user_admin,ou=groups,dc=referral,dc=dhamma,dc=org
+objectClass: posixGroup
+cn: user_admin
+gidNumber: 10002
+
+dn: uid=bill,ou=people,dc=dhamma,dc=org
+objectClass: inetOrgPerson
+objectClass: posixAccount
+uid: bill
+sn: bill
+givenName: bill
+cn: bill
+uidNumber: 1001
+gidNumber: 10000
+userPassword: {SSHA}/o6oa2GOphls/lzOFCwVkw9ARWEEiw+x
+mail: bill@web.de
+loginShell: /bin/false
+homeDirectory: /root
