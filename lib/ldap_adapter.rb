@@ -146,7 +146,7 @@ module DataMapper
       end
       
       # @overwrite from SimpleAdapter
-      def read_resource(query)        
+      def read_resource(query)  
         result = ldap.read_objects(query.model.treebase, 
                                    query.model.key.collect { |k| k.field}, 
                                    to_ldap_conditions(query.conditions))
@@ -176,9 +176,9 @@ module DataMapper
       end
         
       # @overwrite from SimpleAdapter
-      def read_resources(query)        
+      def read_resources(query)     
         result = ldap.read_objects(query.model.treebase, 
-                                   query.model.key.collect { |k| k.field}, 
+                                   query.model.key.collect { |k| k.field }, 
                                    to_ldap_conditions(query.conditions))
         if query.model.multivalue_field
           props_result = []

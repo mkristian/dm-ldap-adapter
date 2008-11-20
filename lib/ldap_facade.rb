@@ -144,7 +144,7 @@ module Ldap
         result << map if key_fields.select do |key_field|
           if map.member? key_field.to_sym
             # convert field to integer
-            map[key_field.to_sym] = [map[key_field.to_sym].collect { |k| k.to_i }].flatten
+            map[key_field.to_sym] = [map[key_field.to_sym].collect { |k| k.to_i != 0 ? k.to_s : k }].flatten
             true
           end
         end.size > 0 # i.e. there was at least one key_field in the map
