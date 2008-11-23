@@ -65,3 +65,13 @@ module DataMapper
     end
   end
 end
+
+module Ldap
+  module LoggerModule
+
+    def logger
+      @logger ||= LoggerFacade.new(self.class)
+    end
+
+  end
+end

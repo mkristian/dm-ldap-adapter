@@ -1,7 +1,29 @@
 require 'pathname'
+
+require Pathname(__FILE__).dirname.parent.expand_path + 'lib/logger'
+
+Logging.init :debug, :info, :warn, :error, :fatal
+
+logger = Logging::Logger.new(:root)
+appender = Logging::Appender.stdout
+appender.layout = Logging::Layouts::Pattern.new(:pattern => "%d [%-5l] (%c) %m\n")
+logger.add_appenders(appender)
+logger.level = :debug
+logger.info "initialized logger . . ."
+
+l = Logging::Logger.new('A')
+p l
+p l.parent
+l = Logging::Logger.new('A::B')
+p l
+p l.parent
+
+
+
+#require Pathname(__FILE__).dirname.parent.expand_path + 'lib/simple_logger'
+require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_resource'
 require Pathname(__FILE__).dirname.parent.expand_path + 'lib/simple_adapter'
 require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_adapter'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_resource'
 require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_facade'
 
 DataMapper.setup(:default, {

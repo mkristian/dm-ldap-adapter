@@ -13,9 +13,15 @@ module DataMapper
     end
     class SimpleAdapter < AbstractAdapter
 
+      include ::Ldap::LoggerModule
+
       # @overwriten from AbstractAdapter
       def transaction_primitive
         NoopTransaction.new
+      end
+
+      def initialize(name, uri_or_options)
+        super(name, uri_or_options)
       end
 
       protected

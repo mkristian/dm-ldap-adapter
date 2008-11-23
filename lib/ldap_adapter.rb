@@ -1,9 +1,11 @@
 module Ldap
-  
+
   # the class provides two ways of getting a LdapFacade. either
   # one which is put on the current Thread or a new one
   class LdapConnection
     
+    include Ldap::LoggerModule
+
     def initialize(uri)
       @ldaps = { }
       auth =  { 
@@ -73,14 +75,15 @@ module DataMapper
 
       # @overwrite from AbstractAdapter
       def initialize(name, uri_or_options)
-        super
-
+        super(name, uri_or_options)
         @ldap_connection = ::Ldap::LdapConnection.new(@uri)
       end
 
       # @overwrite from SimpleAdapter
       def create_resource(resource)
-        props = resource.class.ldap_properties(resource)
+        logger.debug(resource.inspect) if logger.debug?
+
+        props = resource.model.ldap_properties(resource)
         key = nil
         resource.send(:properties).each do |prop|
           value = prop.get!(resource)
@@ -91,6 +94,7 @@ module DataMapper
                                        resource.model.treebase, 
                                        key_properties(resource).field, 
                                        props)
+        logger.debug("key value: #{key_value.inspect}") if logger.debug?
         if key_value
           key.set!(resource, key_value.to_i)
           resource
@@ -147,6 +151,7 @@ module DataMapper
       
       # @overwrite from SimpleAdapter
       def read_resource(query)  
+        
         result = ldap.read_objects(query.model.treebase, 
                                    query.model.key.collect { |k| k.field}, 
                                    to_ldap_conditions(query.conditions))

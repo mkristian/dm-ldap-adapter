@@ -29,6 +29,8 @@ module Ldap
       ssha(secret, "")
     end
     
+    include LoggerModule
+
     # @param config Hash for the ldap connection
     def initialize(config)
       if config.is_a? Hash
@@ -59,10 +61,9 @@ module Ldap
                     :attributes => props)
         id
       else
-        # TODO logger
-        puts dn(dn_prefix, treebase)
-        p props
-        puts @ldap.get_operation_result
+        msg = ldap_error("create", 
+                                dn(dn_prefix, treebase)) + "\n\t#{props.inspect}"
+        self.logger.warn(msg)
         nil
       end
     end
@@ -118,7 +119,7 @@ module Ldap
           f = Net::LDAP::Filter.eq( cond[1].to_s, c.to_s.gsub(/%/, "*").gsub(/_/, "*").gsub(/\*\*/, "*") )
         else
           # TODO logger
-          puts cond[0].to_s + " needs coding"
+          self.logger.error(cond[0].to_s + " needs coding")
         end
         filters << f
       end
@@ -131,8 +132,7 @@ module Ldap
           filter = filter & f
         end
       end
-      #p filter
-      # puts filter.to_s
+      self.logger.debug("search filter: (#{filter.to_s})") if self.logger.debug?
       result = []
       @ldap.search( :base => "#{treebase},#{@ldap.base}",
                     :filter => filter ) do |res|
@@ -162,10 +162,9 @@ module Ldap
                        :operations => actions )
         true
       else
-        # TODO logger
-        puts dn(dn_prefix, treebase)
-        p actions
-        puts @ldap.get_operation_result
+        self.logger.warn(ldap_error("update", 
+                                    dn(dn_prefix, treebase) + "\n\t#{actions.inspect}"))
+        nil
       end
     end
 
@@ -176,9 +175,10 @@ module Ldap
       if @ldap.delete( :dn => dn(dn_prefix, treebase) )
         true
       else
-        # TODO logger
-        puts dn
-        puts get_operation_result
+        self.logger.warn(ldap_error("delete", 
+                                    dn(dn_prefix, treebase)))
+        
+        nil
       end
     end
 
@@ -216,6 +216,9 @@ module Ldap
       end
       entry.map
     end
-
+    
+    def ldap_error(method, dn)
+      "#{method} error: (#{@ldap.get_operation_result.code}) #{@ldap.get_operation_result.message}\n\tDN: #{dn}"
+    end
   end
 end
