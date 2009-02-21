@@ -9,27 +9,7 @@ module Ldap
       end
     end
     
-    # method from openldap faq which produces the userPassword attribute
-    # for the ldap
-    # @param secret String the password
-    # @param salt String the salt for the password digester
-    # @return the encoded password/salt
-    def self.ssha(secret, salt)
-      require 'sha1' 
-      require 'base64' 
-      (salt.empty? ? "{SHA}": "{SSHA}") +  
-        Base64.encode64(Digest::SHA1.digest(secret + salt) + salt).gsub(/\n/, '')
-    end
-
-    # method from openldap faq which produces the userPassword attribute
-    # for the ldap
-    # @param secret String the password
-    # @return the encoded password
-    def self.sha(secret)
-      ssha(secret, "")
-    end
-    
-    include LoggerModule
+    include ::Slf4r::Logger
 
     # @param config Hash for the ldap connection
     def initialize(config)
@@ -45,7 +25,7 @@ module Ldap
     # @param key_field field which carries the integer unique id of the entity
     # @param props Hash of the ldap attributes of the new ldap object
     # @return nil in case of an error or the new id of the created object
-    def create_object(dn_prefix, treebase, key_field, props)
+    def create_object(dn_prefix, treebase, key_field, props, silence = false)
       base = "#{treebase},#{@ldap.base}"
       id_sym = key_field.downcase.to_sym
       max = 0
@@ -61,9 +41,16 @@ module Ldap
                     :attributes => props)
         id
       else
-        msg = ldap_error("create", 
-                                dn(dn_prefix, treebase)) + "\n\t#{props.inspect}"
-        self.logger.warn(msg)
+        unless silence
+          msg = ldap_error("create", 
+                             dn(dn_prefix, treebase)) + "\n\t#{props.inspect}"
+          # TODO maybe raise always an error
+          if @ldap.get_operation_result.code == 68
+            raise ::DataMapper::PersistenceError.new(msg)
+          else
+            logger.warn(msg)
+          end
+        end
         nil
       end
     end
@@ -118,8 +105,7 @@ module Ldap
         when :like
           f = Net::LDAP::Filter.eq( cond[1].to_s, c.to_s.gsub(/%/, "*").gsub(/_/, "*").gsub(/\*\*/, "*") )
         else
-          # TODO logger
-          self.logger.error(cond[0].to_s + " needs coding")
+          logger.error(cond[0].to_s + " needs coding")
         end
         filters << f
       end
@@ -132,7 +118,7 @@ module Ldap
           filter = filter & f
         end
       end
-      self.logger.debug("search filter: (#{filter.to_s})") if self.logger.debug?
+      logger.debug { "search filter: (#{filter.to_s})" }
       result = []
       @ldap.search( :base => "#{treebase},#{@ldap.base}",
                     :filter => filter ) do |res|
@@ -162,8 +148,8 @@ module Ldap
                        :operations => actions )
         true
       else
-        self.logger.warn(ldap_error("update", 
-                                    dn(dn_prefix, treebase) + "\n\t#{actions.inspect}"))
+        logger.warn(ldap_error("update", 
+                               dn(dn_prefix, treebase) + "\n\t#{actions.inspect}"))
         nil
       end
     end
@@ -175,8 +161,8 @@ module Ldap
       if @ldap.delete( :dn => dn(dn_prefix, treebase) )
         true
       else
-        self.logger.warn(ldap_error("delete", 
-                                    dn(dn_prefix, treebase)))
+        logger.warn(ldap_error("delete", 
+                               dn(dn_prefix, treebase)))
         
         nil
       end

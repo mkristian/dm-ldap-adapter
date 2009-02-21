@@ -1,0 +1,46 @@
+dn: ou=people,dc=example,dc=com
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=example,dc=com
+objectClass: organizationalUnit
+ou: groups
+
+dn: uid=kristian,ou=people,dc=example,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+uid: kristian
+sn: Meier
+givenName: Kristian
+cn: Kristian Meier
+uidNumber: 1000
+gidNumber: 10000
+userPassword: {SSHA}/o6oa2GOphls/lzOFCwVkw9ARWEEiw+x
+mail: m.kristian@web.de
+loginShell: /bin/false
+homeDirectory: 
+
+dn: cn=manager,ou=groups,dc=example,dc=com
+objectClass: posixGroup
+cn: manager
+gidNumber: 10000
+
+dn: cn=admin,ou=groups,dc=example,dc=com
+objectClass: posixGroup
+cn: admin
+gidNumber: 10001
+memberUid: kristian
+
+dn: uid=bill,ou=people,dc=example,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+uid: bill
+sn: bill
+givenName: bill
+cn: bill
+uidNumber: 1001
+gidNumber: 10000
+userPassword: {SSHA}/o6oa2GOphls/lzOFCwVkw9ARWEEiw+x
+mail: bill@web.de
+loginShell: /bin/false
+homeDirectory: /root

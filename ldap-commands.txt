@@ -1,11 +1,14 @@
-ldapadd -x -w behappy -c -D "cn=admin,dc=dhamma,dc=org" < dhamma.org.ldif
+# populate ldap with basic data
+ldapadd -x -w behappy -c -D "cn=admin,dc=example,dc=com" < test.ldif
 
-ldapsearch -x -w behappy -c -D "cn=admin,dc=dhamma,dc=org" -b 'dc=dhamma,dc=org'
+# search the whole domain
+ldapsearch -x -w behappy -c -D "cn=admin,dc=example,dc=com" -b 'dc=example,dc=com'
 
-ldapsearch -x -w behappy -c -D "cn=authenticator,dc=dhamma,dc=org" -b 'dc=dhamma,dc=org'
+# search people
+ldapsearch -x -w behappy -c -D "cn=admin,dc=example,dc=com" -b 'ou=people,dc=example,dc=com'
 
-ldapsearch -x -w behappy -c -D "cn=admin,dc=dhamma,dc=org" -b 'ou=people,dc=dhamma,dc=org'
+#search groups
+ldapsearch -x -w behappy -c -D "cn=admin,dc=example,dc=com" -b 'ou=groups,dc=example,dc=com'
 
-ldapsearch -x -w behappy -c -D "cn=admin,dc=dhamma,dc=org" -b 'ou=groups,dc=applications,dc=dhamma,dc=org'
-
-ldapsearch -x -w behappy -c -D "cn=admin,dc=dhamma,dc=org" -b 'ou=people,dc=dhamma,dc=org' "uid=*" | grep ^uid: | sed -e "s/^.....//" -e 's/$/,ou=people,dc=dhamma,dc=org"/' -e 's/^/-x -w behappy -c -D "cn=admin,dc=dhamma,dc=org" "uid=/' | xargs -L 1 echo ldapdelete
+# printout delete commands for all people
+ldapsearch -x -w behappy -c -D "cn=admin,dc=example,dc=com" -b 'ou=people,dc=example,dc=com' "uid=*" | grep ^uid: | sed -e "s/^.....//" -e 's/$/,ou=people,dc=example,dc=com"/' -e 's/^/-x -w behappy -c -D "cn=admin,dc=example,dc=com" "uid=/' | xargs -L 1 echo ldapdelete

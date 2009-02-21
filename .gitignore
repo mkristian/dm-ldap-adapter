@@ -1,2 +1,6 @@
 env.sh
 *~
+doc
+pkg
+.yardoc
+.source_index

@@ -1,18 +1,22 @@
+require 'rubygems'
+
+require 'slf4r/ruby_logger'
+gem 'data_objects', "0.9.11"
 require 'pathname'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/simple_adapter'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/memory_adapter'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_adapter'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_resource'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_facade'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_facade_mock'
+$LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
+
+require 'ldap_resource'
+#require 'ldap_facade_mock' # uncomment this to use the mock facade
+require 'adapters/ldap_adapter'
+require 'adapters/memory_adapter'
 
 DataMapper.setup(:default, 'sqlite3::memory:')
 DataMapper.setup(:ldap, {
                    :adapter  => 'ldap',
                    :host => 'localhost',
                    :port => '389',
-                   :base => "dc=dhamma,dc=org",
-                   :bind_name => "cn=admin,dc=dhamma,dc=org",
+                   :base => "dc=example,dc=com",
+                   :bind_name => "cn=admin,dc=example,dc=com",
                    :password => "behappy"   
 })
 DataMapper.setup(:memory, {:adapter  => 'memory'})
@@ -20,7 +24,7 @@ DataMapper.setup(:memory, {:adapter  => 'memory'})
 class User
   include DataMapper::Resource
   property :id,        Integer, :serial => true, :field => "uidnumber"
-  property :login,     String, :field => "uid"
+  property :login,     String, :field => "uid", :unique_index => true
   property :hashed_password,  String, :field => "userpassword", :access => :private
   property :name,      String, :field => "cn"
   property :mail,      String
@@ -68,7 +72,7 @@ class User
   end
 
   def password=(password)
-    attribute_set(:hashed_password, Ldap::LdapFacade.ssha(password, "--#{Time.now}--#{login}--")) if password
+    attribute_set(:hashed_password, Ldap::Digest.ssha(password, "--#{Time.now}--#{login}--")) if password
   end
 end
 

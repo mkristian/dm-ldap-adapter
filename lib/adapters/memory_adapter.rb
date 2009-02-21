@@ -1,4 +1,6 @@
 require "dm-core"
+require 'adapters/simple_adapter'
+
 # this and the SimpleAdapter is basically the 
 # dm-core/adapter/in_memory_adapter.rb most credits go dm-core. 
 # there are few bug fixes and enhancements.
@@ -8,7 +10,7 @@ module DataMapper
 
       public
 
-      # @overwrite from SimpleAdapter
+      # @see SimpleAdapter
       def initialize(name, uri_or_options)
         super
 
@@ -16,33 +18,39 @@ module DataMapper
         @ids = Hash.new { |hash,model| hash[model] = 0 }
       end
 
-      # @overwrite from SimpleAdapter
+      # @see SimpleAdapter
       def create_resource(resource)
+        uniques = resource.model.properties.select do |prop|
+          prop if prop.unique_index
+        end
+        uniques.each do |prop|
+          raise PersistentError.new "#{prop.name} = #{prop.get(resource)} already exists" unless resource.model.first( prop.name => prop.get(resource) ).nil?
+        end
         @records[resource.model] << resource
         resource.id = (@ids[resource.model] += 1) if resource.key.size == 1 
         # and resource.key[0].serial?
         resource
       end
 
-      # @overwrite from SimpleAdapter
+      # @see SimpleAdapter
       def update_resource(resource, attributes)
         attributes.each do |property, value|
           property.set!(resource, value)
         end
       end
 
-      # @overwrite from SimpleAdapter
+      # @see SimpleAdapter
       def delete_resource(resource)
         records = @records[resource.model]
         records.delete(resource)
       end
 
-      # @overwrite from SimpleAdapter
+      # @see SimpleAdapter
       def read_resource(query)        
         read(query, false)
       end
 
-      # @overwrite from SimpleAdapter
+      # @see SimpleAdapter
       def read_resources(query)        
         read(query, true)
       end

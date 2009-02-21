@@ -1,0 +1,10 @@
+version 0.2.0
+=============
+
+* switched to Slf4r logger
+
+* the whole thing became a gem
+
+* cleaned up example
+
+* moved the SHA and SSHA calculation into its own helper class (incompatible change to older version)

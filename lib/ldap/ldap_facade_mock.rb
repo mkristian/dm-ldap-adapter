@@ -1,5 +1,5 @@
 module Ldap
-  class LdapFacadeMock
+  class LdapFacade
 
     def self.open(config)
       puts "open"
@@ -14,7 +14,7 @@ module Ldap
       puts
     end
 
-    def create_object(treebase, dn_prefix, key_field, props)
+    def create_object(treebase, dn_prefix, key_field, props, silence = false)
       options = { :dn_prefix => dn_prefix, 
         :treebase => treebase, 
         :key_field => key_field, 

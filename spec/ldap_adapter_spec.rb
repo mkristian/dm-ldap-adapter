@@ -34,9 +34,11 @@ require 'spec_helper'
       end
     end
 
-    it 'should be able to get the object' do
+    it 'should log when trying to create an entity with already used key' do
       DataMapper.repository(adapter) do
-        User.get(@user1.id).should == @user1
+       #p User.all
+       lambda { User.create(:login => "black", :name => 'Black', :age => 0) }.should raise_error
+      #p User.all
       end
     end
 
@@ -175,35 +177,35 @@ require 'spec_helper'
       end
     end
 
-    if DataMapper.repository(adapter).adapter.respond_to? :ldap_connection
+    if DataMapper.repository(adapter).adapter.respond_to? :open_ldap_connection
     
     it 'should use one connection for several actions' do
       DataMapper.repository(adapter) do
-        DataMapper.repository.adapter.ldap_connection.open do
-          hash = DataMapper.repository.adapter.ldap_connection.current.hash
+        DataMapper.repository.adapter.open_ldap_connection do
+          hash = DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash
           User.all
-          DataMapper.repository.adapter.ldap_connection.current.hash.should == hash
+          DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should == hash
           user = User.get(@user3.id)
-          DataMapper.repository.adapter.ldap_connection.current.hash.should == hash
+          DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should == hash
           user.name = "another name"
           user.save
-          DataMapper.repository.adapter.ldap_connection.current.hash.should == hash
+          DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should == hash
         end
-        DataMapper.repository.adapter.ldap_connection.current.hash.should_not == hash
+        DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
       end
     end
 
     it 'should use new connection for each action' do
       DataMapper.repository(adapter) do
-        hash = DataMapper.repository.adapter.ldap_connection.current.hash
+        hash = DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash
         User.all
 
-        DataMapper.repository.adapter.ldap_connection.current.hash.should_not == hash
+        DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
         user = User.get(@user3.id)
-        DataMapper.repository.adapter.ldap_connection.current.hash.should_not == hash
+        DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
         user.name = "yet another name"
         user.save
-        DataMapper.repository.adapter.ldap_connection.current.hash.should_not == hash
+        DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
       end
     end
 end

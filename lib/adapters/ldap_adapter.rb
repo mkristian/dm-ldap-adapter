@@ -1,10 +1,14 @@
+require 'adapters/simple_adapter'
+# load the ldap facade only if NOT loaded before
+require 'ldap/ldap_facade' unless Object.const_defined?('Ldap') and Ldap.const_defined?('LdapFacade')
+
 module Ldap
 
   # the class provides two ways of getting a LdapFacade. either
   # one which is put on the current Thread or a new one
   class LdapConnection
     
-    include Ldap::LoggerModule
+    include ::Slf4r::Logger
 
     def initialize(uri)
       @ldaps = { }
@@ -34,7 +38,8 @@ module Ldap
       end
     end
     
-    # @return LdapFacade either the one from the current Thread or a new one
+    # @return [Ldap::LdapFacade]
+    #  either the one from the current Thread or a new one
     def current
       ldap = @ldaps[Thread.current]
       if ldap
@@ -51,9 +56,14 @@ module DataMapper
   module Adapters
     class LdapAdapter < SimpleAdapter
 
-      # @return LdapFacade ready to use
+      # @return [Ldap::LdapFacade] 
+      #   ready to use LdapFacade
       def ldap
         @ldap_connection.current
+      end
+
+      def open_ldap_connection(&block)
+        @ldap_connection.open(&block)
       end
 
       def key_properties(resource)
@@ -61,8 +71,10 @@ module DataMapper
       end
 
       # helper to remove datamapper specific classes from the conditions
-      # @param conditions
-      # @retrun Array of tuples: [action, attribute name, new value]
+      # @param [Array] conditions 
+      #   array of tuples: (action, property, new value)
+      # @return [Array] 
+      #   tuples: (action, attribute name, new value)
       def to_ldap_conditions(conditions)
         ldap_conditions = []
         conditions.each do |c|
@@ -73,15 +85,18 @@ module DataMapper
 
       public
 
-      # @overwrite from AbstractAdapter
       def initialize(name, uri_or_options)
         super(name, uri_or_options)
         @ldap_connection = ::Ldap::LdapConnection.new(@uri)
       end
 
-      # @overwrite from SimpleAdapter
+      # @param [DataMapper::Resource] resource
+      #   to be created
+      # @see SimpleAdapter#create_resource
+      # @return [Fixnum] 
+      #    value for the primary key or nil
       def create_resource(resource)
-        logger.debug(resource.inspect) if logger.debug?
+        logger.debug { resource.inspect }
 
         props = resource.model.ldap_properties(resource)
         key = nil
@@ -93,8 +108,8 @@ module DataMapper
         key_value = ldap.create_object(resource.model.dn_prefix(resource), 
                                        resource.model.treebase, 
                                        key_properties(resource).field, 
-                                       props)
-        logger.debug("key value: #{key_value.inspect}") if logger.debug?
+                                       props, resource.model.multivalue_field)
+        logger.debug { "key value: #{key_value.inspect}" }
         if key_value
           key.set!(resource, key_value.to_i)
           resource
@@ -110,7 +125,11 @@ module DataMapper
         end
       end
 
-      # @overwrite from SimpleAdapter
+      # @param [DataMapper::Resource] resource
+      #   to be updated
+      # @param [Hash] attributes
+      #   new attributes for the resource
+      # @see SimpleAdapter#update_resource
       def update_resource(resource, attributes)
         actions = attributes.collect do |property, value|
           field = property.field.to_sym #TODO sym needed or string ???
@@ -136,7 +155,9 @@ module DataMapper
                            actions)
       end
 
-      # @overwrite from SimpleAdapter
+      # @param [DataMapper::Resource] resource
+      #   to be deleted
+      # @see SimpleAdapter#delete_resource
       def delete_resource(resource)
         if resource.model.multivalue_field
           # set the original value so update does the right thing
@@ -149,7 +170,11 @@ module DataMapper
         end
       end
       
-      # @overwrite from SimpleAdapter
+      # @param [DataMapper::Query] query
+      #   the search criteria
+      # @return [DataMapper::Resource]
+      #   the found resource or nil
+      # @see SimpleAdapter#read_resource
       def read_resource(query)  
         
         result = ldap.read_objects(query.model.treebase, 
@@ -180,7 +205,11 @@ module DataMapper
         end
       end
         
-      # @overwrite from SimpleAdapter
+      # @param [DataMapper::Query] query
+      #   the search criteria
+      # @return [Array<DataMapper::Resource]
+      #   the array of found resources
+      # @see SimpleAdapter#read_resources
       def read_resources(query)     
         result = ldap.read_objects(query.model.treebase, 
                                    query.model.key.collect { |k| k.field }, 

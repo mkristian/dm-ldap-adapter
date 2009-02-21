@@ -30,6 +30,9 @@ require 'spec_helper'
         @user1.destroy
         @user2.destroy
         @user3.destroy
+
+        @group1.destroy
+        @group2.destroy
       end
     end
 
@@ -138,16 +141,22 @@ require 'spec_helper'
     
     it 'should be able to delete a user from a group' do
       DataMapper.repository(adapter) do
+        size = GroupUser.all.size
         @user1 = User.get!(@user1.id)
         @user1.groups << @group1
         @user1.groups << @group2
         @user2.groups << @group1
+        GroupUser.all.size.should == size + 3
       end
       DataMapper.repository(adapter) do
         @user1 = User.get!(@user1.id)
         @user1.groups.delete(@group1)
         User.get(@user1.id).groups.should == [@group2]
         User.get(@user2.id).groups.should == [@group1]
+        @user2 = User.get!(@user2.id)
+        @user2.groups.delete(@group1)
+        User.get(@user1.id).groups.should == [@group2]
+        User.get(@user2.id).groups.should == []
       end
     end
 

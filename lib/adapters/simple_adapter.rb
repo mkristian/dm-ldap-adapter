@@ -1,4 +1,6 @@
 require "dm-core"
+require 'slf4r'
+
 module DataMapper
   module Adapters
     class NoopTransaction
@@ -13,9 +15,9 @@ module DataMapper
     end
     class SimpleAdapter < AbstractAdapter
 
-      include ::Ldap::LoggerModule
+      include Slf4r::Logger
 
-      # @overwriten from AbstractAdapter
+      # @see AbstractAdapter
       def transaction_primitive
         NoopTransaction.new
       end
@@ -27,10 +29,10 @@ module DataMapper
       protected
       
       # checks whether a given resource fullfils the conditions
-      # @param resource
-      # @param Array of conditions
-      # @return true if the resource are within the conditions
-      # otherwise false
+      # @param [DataMapper::Resource] resource
+      # @param [Array<Condition>] conditions
+      # @return [Boolean] 
+      #   true if the resource are within the conditions otherwise false
       def filter_resource(resource, conditions)
         #puts "condi"
         #p conditions
@@ -68,9 +70,11 @@ module DataMapper
 
       public
 
-      # @overwrite from AbstractAdapter
-      # @param collection of Resources
-      # @return integer number of the newly created resources
+      # @see AbstractAdapter
+      # @param [Array<DataMapper::Resources>] resources
+      #   aaaa
+      # @return [Fixnum] 
+      #    number of the newly created resources
       def create(resources)
         resources.select do |resource|
 
@@ -79,11 +83,15 @@ module DataMapper
         end.size # just return the number of create resources
       end
 
-      # @overwrite from AbstractAdapter
-      # @param collection of attribute, i.e. the name/value pairs which 
-      # needs to be updated
-      # @param Query on all resources which are selected by that query the update will be applied
-      # @return integer number of the updated resources
+      # @see AbstractAdapter
+      # @param [Hash] attributes
+      #   collection of attribute, i.e. the name/value pairs which 
+      #   needs to be updated
+      # @param [Query] 
+      #   on all resources which are selected by that query the 
+      #   update will be applied
+      # @return [Fixnum] 
+      #   number of the updated resources
       def update(attributes, query)
         read_many(query).select do |resource|
           
@@ -92,9 +100,11 @@ module DataMapper
         end.size
       end
 
-      # @overwrite from AbstractAdapter
-      # @param Query which selects the resource
-      # @return the found Resource or nil
+      # @see AbstractAdapter
+      # @param [DataMapper::Query] query
+      #    which selects the resource
+      # @return [DataMapper::Resource] 
+      #    the found Resource or nil
       def read_one(query)
         result = read_resource(query)
         if result.is_a? Resource
@@ -106,9 +116,11 @@ module DataMapper
         end
       end
       
-      # @overwrite from AbstractAdapter
-      # @param Query which selects the resources
-      # @return a collection of Resources
+      # @see AbstractAdapter
+      # @param [DataMapper::Query] query
+      #   which selects the resources
+      # @return [DataMapper::Collection] 
+      #   collection of Resources
       def read_many(query)
         Collection.new(query) do |set|
           result = read_resources(query)
@@ -124,9 +136,11 @@ module DataMapper
         end
       end
 
-      # @overwrite from AbstractAdapter
-      # @param Query which selects the resources to be deleted
-      # @return integer number of the deleted resources
+      # @see AbstractAdapter
+      # @param [Query] query
+      #   which selects the resources to be deleted
+      # @return [Fixnum]
+      #   number of the deleted resources
       def delete(query)
         read_many(query).each do |resource|
 
@@ -137,38 +151,45 @@ module DataMapper
       
       private
 
-      # @param Resource which will be created
-      # @return either the resource itself if the creation was successful or
-      # nil 
+      # @param [DataMapper::Resource] resource
+      #   which will be created
+      # @return [DataMapper::Resource] 
+      #   either the resource itself if the creation was successful or nil 
       def create_resource(resource)
         raise NotImplementedError.new
       end
 
-      # @param Query which selects the resource
-      # @return the resource which is of typo Resource
-      # or a set of values ordered in the same manner as query.fields attributes
+      # @param [DataMapper::Query] query
+      #   which selects the resource
+      # @return [DataMapper::Resource,Array<String>] 
+      #   the resource or a set of values ordered in the same manner as query.fields attributes
       def read_resource(query)
         raise NotImplementedError.new
       end
 
-      # @param Query which selects the resources
-      # @return an Array of resources or an Array of
-      # ordered values as in the 'read_resource' above
+      # @param [DataMapper::Query] query
+      #   which selects the resources
+      # @return [Array<DataMapper::Resource>,Array<String>]
+      #   resources or ordered values 
+      # @see #read_resource
       def read_resources(query)
         raise NotImplementedError.new
       end
 
-      # @param Resource which will be updated with the given attributes.
-      # @param attributes is a Hash which keys are the property names and the values
-      # are the new values of that property. 
-      # @return the resurce on success otherwise nil
+      # @param [DataMapper::Resource] resource
+      #   which will be updated with the given attributes.
+      # @param [Hash] attributes 
+      #    the keys are the property names and the values are the new values of that property. 
+      # @return [DataMapper::Resource] 
+      #   resource on success otherwise nil
       def update_resource(resource, attributes)
         raise NotImplementedError.new
       end
 
-      # @param Resource which will be deleted
-      # @return either the resource if the deletion was successful or
-      # nil 
+      # @param [DataMapper::Resource] resource
+      #   which will be deleted
+      # @return [DataMapper::Resource]
+      #   either the resource if the deletion was successful or nil 
       def delete_resource(resource)
         raise NotImplementedError.new
       end

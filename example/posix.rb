@@ -1,44 +1,52 @@
 require 'pathname'
+require 'rubygems'
+require 'slf4r/logging_logger'
+gem 'data_objects' , "0.9.11"
+require 'dm-core'
 
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/logger'
+$LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
 
-Logging.init :debug, :info, :warn, :error, :fatal
+Logging.init :debug, :info, :warn, :error
 
-logger = Logging::Logger.new(:root)
 appender = Logging::Appender.stdout
-appender.layout = Logging::Layouts::Pattern.new(:pattern => "%d [%-5l] (%c) %m\n")
+appender.layout = Logging::Layouts::Pattern.new(:pattern => "%d [%-l] (%c) %m\n")
+logger = Logging::Logger.new(:root)
 logger.add_appenders(appender)
 logger.level = :debug
 logger.info "initialized logger . . ."
 
-l = Logging::Logger.new('A')
-p l
-p l.parent
-l = Logging::Logger.new('A::B')
-p l
-p l.parent
+dummy = true  #uncomment this to use dummy, i.e. a database instead of ldap
+dummy = false # uncomment this to use ldap
+unless dummy
+  require 'ldap_resource'
+  require 'adapters/ldap_adapter'
 
-
-
-#require Pathname(__FILE__).dirname.parent.expand_path + 'lib/simple_logger'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_resource'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/simple_adapter'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_adapter'
-require Pathname(__FILE__).dirname.parent.expand_path + 'lib/ldap_facade'
-
-DataMapper.setup(:default, {
-                   :adapter  => 'ldap',
-                   :host => 'localhost',
-                   :port => '389',
-                   :base => ENV['LDAP_BASE'] || "dc=example,dc=com",
-                   :bind_name => "cn=admin," + (ENV['LDAP_BASE'] || "dc=example,dc=com"),
-                   :password => ENV['LDAP_PWD'] || "behappy"   
-})
+  DataMapper.setup(:default, {
+                     :adapter  => 'ldap',
+                     :host => 'localhost',
+                     :port => '389',
+                     :base => ENV['LDAP_BASE'] || "dc=example,dc=com",
+                     :bind_name => "cn=admin," + (ENV['LDAP_BASE'] || "dc=example,dc=com"),
+                     :password => ENV['LDAP_PWD'] || "behappy"   
+                   })
+else
+  require 'dummy_ldap_resource'
+  DataMapper.setup(:default, 'sqlite3::memory:')
+  adapter = DataMapper.repository.adapter
+  def adapter.ldap_connection
+    con = Object.new
+    def con.open
+      yield
+    end
+    con
+  end
+end
 
 class User
   include DataMapper::Resource
-  property :id,     Integer, :field => "uidnumber", :serial => true
-  property :login,     String, :field => "uid", :key => true
+
+  property :id,     Serial, :field => "uidnumber"
+  property :login,     String, :field => "uid"
   property :hashed_password,  String, :field => "userpassword", :access => :private
   property :name,      String, :field => "cn"
 
@@ -58,7 +66,7 @@ class User
       self
     end
     def groups.delete(group)
-      gu = GroupUser.first(:memberuid => @user.id, :gidnumber => group.id)
+      gu = GroupUser.first(:memberuid => @user.login, :gidnumber => group.id)
       if gu
         gu.destroy
         super
@@ -80,12 +88,13 @@ class User
   end
 
   def password=(password)
-    attribute_set(:hashed_password, Ldap::LdapFacade.ssha(password, "--#{Time.now}--#{login}--")) if password
+    attribute_set(:hashed_password, Ldap::Digest.sha(password)) if password
   end
 end
 
 class Group
   include DataMapper::Resource
+  include Slf4r::Logger
   property :id,       Integer, :serial => true, :field => "gidnumber"
   property :name,     String, :field => "cn"
   
@@ -95,11 +104,33 @@ class Group
   
   ldap_properties {{ :objectclass => "posixGroup"}}
 
-  has n, :users, :child_key => [:gidnumber]
+  def users
+    users = GroupUser.all(:gidnumber => id).collect{ |gu| gu.user }
+    def users.group=(group)
+      @group = group
+    end
+    users.group = self
+    def users.<<(user)
+      unless member? user
+        GroupUser.create(:memberuid => user.login, :gidnumber => @group.id)
+        super
+      end
+      self
+    end
+    def users.delete(user)
+      gu = GroupUser.first(:memberuid => user.login, :gidnumber => @group.id)
+      if gu
+        gu.destroy
+        super
+      end
+    end
+    users
+  end
 end
  
 class GroupUser
   include DataMapper::Resource
+  include Slf4r::Logger
  
   dn_prefix { |group_user| "cn=#{group_user.group.name}" }
   
@@ -122,10 +153,14 @@ class GroupUser
   end
 
   def user
-    User.get!(memberuid)
+    User.first(:login => memberuid)
   end
 
   def user=(user)
     memberuid = user.login
   end
+end
+
+if dummy
+  DataMapper.auto_migrate!
 end
