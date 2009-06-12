@@ -109,9 +109,9 @@ module DataMapper
                                        resource.model.treebase, 
                                        key_properties(resource).field, 
                                        props, resource.model.multivalue_field)
-        logger.debug { "key value: #{key_value.inspect}" }
-        if key_value
-          key.set!(resource, key_value.to_i)
+        logger.debug { "resource #{resource.inspect} key value: #{key_value.inspect}" + ", multivalue_field: " + resource.model.multivalue_field.to_s }
+        if key_value and !key.nil?
+          key.set!(resource, key_value.to_i) 
           resource
         elsif resource.model.multivalue_field
           multivalue_prop = resource.send(:properties).detect do |prop|
@@ -199,7 +199,8 @@ module DataMapper
           values = result.first
           if values
             query.fields.collect do |f|
-              values[f.field.to_sym].first
+              val = values[f.field.to_sym]
+              val.first if val
             end
           end
         end
@@ -234,7 +235,8 @@ module DataMapper
         else # no multivalue field
           result.collect do |props|
             query.fields.collect do |f|
-              props[f.field.to_sym].first
+              prop = props[f.field.to_sym]
+              prop.first if prop
             end
           end
         end

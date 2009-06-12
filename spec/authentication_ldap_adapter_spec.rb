@@ -7,7 +7,7 @@ describe DataMapper.repository(:ldap).adapter do
 
     before do
       DataMapper.repository(:ldap) do
-        @user = User.create(:login => "beige", :name => 'Beige')
+        @user = User.new(:login => "beige", :name => 'Beige')
         @user.password = "asd123"
         @user.save
       end

@@ -1,14 +1,9 @@
-.gitignore
-History.markdown
 History.txt
 MIT-LICENSE
 Manifest.txt
 README-example.markdown
-README.markdown
 README.txt
 Rakefile
-Rakefile--
-env.sh
 example/identity_map.rb
 example/posix.rb
 ldap-commands.txt
@@ -27,4 +22,3 @@ spec/ldap_adapter_spec.rb
 spec/spec.opts
 spec/spec_helper.rb
 test.ldif
-u.ldif

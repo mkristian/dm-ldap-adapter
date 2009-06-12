@@ -11,7 +11,7 @@ require 'spec_helper'
   
   describe "A #{DataMapper.repository(adapter).adapter.class.name}" do
 
-    before do
+    before(:each) do
       DataMapper.repository(adapter) do
         @user1 = User.create(:login => "black", :name => 'Black', :age => 0) 
         @user2 = User.create(:login => "brown", :name => 'Brown', :age => 25)
@@ -19,7 +19,7 @@ require 'spec_helper'
       end
     end
     
-    after do
+    after(:each) do
       DataMapper.repository(adapter) do
         @user1.destroy
         @user2.destroy
@@ -36,7 +36,7 @@ require 'spec_helper'
 
     it 'should log when trying to create an entity with already used key' do
       DataMapper.repository(adapter) do
-       #p User.all
+       #p User.first(:login => "black")
        lambda { User.create(:login => "black", :name => 'Black', :age => 0) }.should raise_error
       #p User.all
       end

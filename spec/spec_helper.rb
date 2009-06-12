@@ -1,7 +1,8 @@
 require 'rubygems'
 
 require 'slf4r/ruby_logger'
-gem 'data_objects', "0.9.11"
+Slf4r::LoggerFacade4RubyLogger.level = ::Logger::DEBUG
+require 'do_sqlite3'
 require 'pathname'
 $LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
 

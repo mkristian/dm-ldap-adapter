@@ -38,14 +38,14 @@ module Ldap
       id = max + 1
       props[id_sym] = "#{id}"
       if @ldap.add( :dn => dn(dn_prefix, treebase), 
-                    :attributes => props)
+                    :attributes => props) and @ldap.get_operation_result.code.to_s == "0"
         id
       else
         unless silence
           msg = ldap_error("create", 
                              dn(dn_prefix, treebase)) + "\n\t#{props.inspect}"
           # TODO maybe raise always an error
-          if @ldap.get_operation_result.code == 68
+          if @ldap.get_operation_result.code.to_s == "68"
             raise ::DataMapper::PersistenceError.new(msg)
           else
             logger.warn(msg)

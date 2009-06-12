@@ -22,16 +22,16 @@ module DataMapper
         end
       end
       
-      def treebase(resource = nil)
+      def treebase(resource = nil, &block)
         if block
           @treebase = block
-        elsif resource.instance_of? Hash
+        elsif resource.instance_of? String
           @treebase = resource
           logger.debug { "treebase=#{@treebase.inspect}" }
         elsif resource
           logger.debug { "treebase=#{@treebase.call(resource).inspect}" }
         else
-          logger.debug { "treebase=#{treebase}" }
+          logger.debug { "treebase=#{@treebase}" }
         end
       end
       
