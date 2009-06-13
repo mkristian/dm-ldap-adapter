@@ -119,7 +119,11 @@ module DataMapper
         key = nil
         resource.send(:properties).each do |prop|
           value = prop.get!(resource)
-          props[prop.field.to_sym] = value.to_s unless value.nil?
+          if prop.type == ::DataMapper::Types::LdapArray
+            props[prop.field.to_sym] = value.to_s unless value.nil? or value.size == 0
+          else
+            props[prop.field.to_sym] = value.to_s unless value.nil?
+          end
           key = prop if prop.serial?
         end
         key_value = ldap.create_object(resource.model.dn_prefix(resource), 
@@ -131,9 +135,7 @@ module DataMapper
           key.set!(resource, key_value.to_i) 
           resource
         elsif resource.model.multivalue_field
-          multivalue_prop = resource.send(:properties).detect do |prop|
-            prop.field.to_sym == resource.model.multivalue_field
-          end
+          multivalue_prop = resource.send(:properties)[resource.model.multivalue_field]
           update_resource(resource, 
                           { multivalue_prop => 
                             resource.send(resource.model.multivalue_field)})
@@ -148,24 +150,44 @@ module DataMapper
       #   new attributes for the resource
       # @see SimpleAdapter#update_resource
       def update_resource(resource, attributes)
-        actions = attributes.collect do |property, value|
+        actions = []
+        attributes.each do |property, value|
           field = property.field.to_sym #TODO sym needed or string ???
-          if resource.model.multivalue_field == property.name
-            if value.nil?
-              [:delete, field, resource.original_values[property.name].to_s]
+          if property.type == ::DataMapper::Types::LdapArray
+            if resource.original_values[property.name].nil?
+              actions << [:add, field, value.to_s]
             else
-              [:add, field, value.to_s]
+              array_actions = []
+              resource.original_values[property.name].each do |ov|
+                unless value.member? ov
+                  actions << [:delete, field, ov.to_s]
+                end
+              end
+              value.each do |v|
+                unless resource.original_values[property.name].member? v
+                  actions << [:add, field, v.to_s]
+                end
+              end
+              array_actions
             end
-          elsif value.nil?
-            [:delete, field, []]
-          elsif resource.original_values[property.name].nil?
-            [:add, field, value.to_s]            
           else
-            [:replace, field, value.to_s]
+            if resource.model.multivalue_field == property.name
+              if value.nil?
+                actions << [:delete, field, resource.original_values[property.name].to_s]
+              else
+                actions << [:add, field, value.to_s]
+              end
+            elsif value.nil?
+              actions << [:delete, field, []]
+            elsif resource.original_values[property.name].nil?
+              actions << [:add, field, value.to_s]
+            else
+              actions << [:replace, field, value.to_s]
+            end
           end
         end
-#puts "actions"
-#p actions
+# puts "actions"
+# p actions
 #puts
         ldap.update_object(resource.model.dn_prefix(resource), 
                            resource.model.treebase, 
@@ -216,7 +238,11 @@ module DataMapper
           if values
             query.fields.collect do |f|
               val = values[f.field.to_sym]
-              val.first if val
+              if f.type == DataMapper::Types::LdapArray
+                val if val
+              else
+                val.first if val
+              end
             end
           end
         end

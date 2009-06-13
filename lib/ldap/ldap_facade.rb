@@ -1,4 +1,5 @@
-require "net/ldap.rb"
+require 'net/ldap'
+
 module Ldap
   class LdapFacade
     

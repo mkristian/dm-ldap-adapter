@@ -1,4 +1,6 @@
 require 'ldap/digest'
+require 'dm-core'
+require 'ldap/array'
 
 module DataMapper
   module Resource
