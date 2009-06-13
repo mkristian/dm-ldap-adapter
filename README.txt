@@ -88,6 +88,8 @@ and
 
 gives the same result when *all* names are `NULL` !!!
 
+OR conditions can be done with :conditions option but only of the form "<property_name> <comparator> <value> [or <property_name> <comparator> <value>]*" where the comparator is one of "=", "like"
+
 === multiple repositories
 
 most probably you have to work with ldap as one repository and a database as a second repository. for me it worked best to define the `default_repository` for each model in the model itself:

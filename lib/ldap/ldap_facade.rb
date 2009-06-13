@@ -64,6 +64,27 @@ module Ldap
       conditions.each do |cond|
         c = cond[2]
         case cond[0]
+        when :or_operator
+          f = nil
+          cond[1].each do |cc|
+            ff = case cc[0]
+                 when :eql
+                   Net::LDAP::Filter.eq( cc[1].to_s, cc[2].to_s )
+                 when :gte
+                   f = Net::LDAP::Filter.ge( cc[1].to_s, cc[2].to_s )
+                 when :lte
+                   f = Net::LDAP::Filter.le( cc[1].to_s, cc[2].to_s )
+                 when :like
+                   f = Net::LDAP::Filter.eq( cc[1].to_s, cc[2].to_s.gsub(/%/, "*").gsub(/_/, "*").gsub(/\*\*/, "*") )
+                 else
+                   logger.error(cc[0].to_s + " needs coding")
+                 end
+            if f
+              f = f | ff
+            else
+              f = ff
+            end
+          end
         when :eql
           if c.nil?
             f = ~ Net::LDAP::Filter.pres( cond[1].to_s )
@@ -107,7 +128,7 @@ module Ldap
         else
           logger.error(cond[0].to_s + " needs coding")
         end
-        filters << f
+        filters << f if f
       end
       
       filter = nil

@@ -104,6 +104,23 @@ require 'spec_helper'
       end
     end
 
+    it 'should search objects with or conditions' do
+      if adapter == :ldap
+        DataMapper.repository(adapter) do
+          User.all(:age.not => nil, :conditions => ["name='Black' or name='Blue'"]).should == [@user1]
+          User.all(:age.not => nil, :conditions => ["name='Black' or name='Brown'"]).should == [@user1, @user2]
+          User.all(:age => nil, :conditions => ["name='Black' or name='Brown'"]).should == []
+          User.all(:age => nil, :conditions => ["name='Black' or name='Brown' or name='Blue'"]).should == [@user3]
+          User.all(:conditions => ["name='Black' or name='Brown' or name='Blue'"]).should == [@user1, @user2, @user3]
+          User.all(:conditions => ["name='Black'"]).should == [@user1]
+          User.all(:conditions => ["name like 'Bl%'"]).should == [@user1, @user3]
+          User.all(:conditions => ["name like 'B%'"]).should == [@user1, @user2, @user3]
+          User.all(:conditions => ["name like 'X%X_X'"]).should == []
+        end
+      end
+    end
+
+
     #     it 'should be able to search for objects not included in a range of values' do
     #       User.all(:age.not => 25..100).should == [@user1, @user3]
     #     end
@@ -178,36 +195,36 @@ require 'spec_helper'
     end
 
     if DataMapper.repository(adapter).adapter.respond_to? :open_ldap_connection
-    
-    it 'should use one connection for several actions' do
-      DataMapper.repository(adapter) do
-        DataMapper.repository.adapter.open_ldap_connection do
+
+      it 'should use one connection for several actions' do
+        DataMapper.repository(adapter) do
+          DataMapper.repository.adapter.open_ldap_connection do
+            hash = DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash
+            User.all
+            DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should == hash
+            user = User.get(@user3.id)
+            DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should == hash
+            user.name = "another name"
+            user.save
+            DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should == hash
+          end
+          DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
+        end
+      end
+
+      it 'should use new connection for each action' do
+        DataMapper.repository(adapter) do
           hash = DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash
           User.all
-          DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should == hash
+
+          DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
           user = User.get(@user3.id)
-          DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should == hash
-          user.name = "another name"
+          DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
+          user.name = "yet another name"
           user.save
-          DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should == hash
+          DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
         end
-        DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
       end
     end
-
-    it 'should use new connection for each action' do
-      DataMapper.repository(adapter) do
-        hash = DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash
-        User.all
-
-        DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
-        user = User.get(@user3.id)
-        DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
-        user.name = "yet another name"
-        user.save
-        DataMapper.repository.adapter.instance_variable_get(:@ldap_connection).current.hash.should_not == hash
-      end
-    end
-end
   end
 end

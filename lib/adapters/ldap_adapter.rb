@@ -70,15 +70,32 @@ module DataMapper
         resource.send(:key_properties).first
       end
 
+      COMPARATORS = { "=" => :eql, ">=" => :gte, "<=" => :lte, "like" => :like }
+
       # helper to remove datamapper specific classes from the conditions
       # @param [Array] conditions 
       #   array of tuples: (action, property, new value)
       # @return [Array] 
       #   tuples: (action, attribute name, new value)
-      def to_ldap_conditions(conditions)
+      def to_ldap_conditions(query)
+        conditions = query.conditions
         ldap_conditions = []
         conditions.each do |c|
-          ldap_conditions << [c[0], c[1].field, c[2]]
+          if c[0] == :raw
+            props = {}
+            query.fields.each{ |f| props[f.name] = f.field}
+            or_conditions = []
+            c[1].split('or').each do |e|
+              e.strip!
+              match = e.match("=|<=|>=|like")
+              or_conditions << [COMPARATORS[match.values_at(0)[0]],
+                                props[match.pre_match.strip.to_sym],
+                                match.post_match.strip.gsub(/'/, '')]
+            end
+            ldap_conditions << [:or_operator, or_conditions, nil]
+          else
+            ldap_conditions << [c[0], c[1].field, c[2]]
+          end
         end
         ldap_conditions
       end
@@ -176,10 +193,9 @@ module DataMapper
       #   the found resource or nil
       # @see SimpleAdapter#read_resource
       def read_resource(query)  
-        
         result = ldap.read_objects(query.model.treebase, 
                                    query.model.key.collect { |k| k.field}, 
-                                   to_ldap_conditions(query.conditions))
+                                   to_ldap_conditions(query))
         if query.model.multivalue_field
           resource = result.detect do |item|
             # run over all values of the multivalue field
@@ -214,7 +230,7 @@ module DataMapper
       def read_resources(query)     
         result = ldap.read_objects(query.model.treebase, 
                                    query.model.key.collect { |k| k.field }, 
-                                   to_ldap_conditions(query.conditions))
+                                   to_ldap_conditions(query))
         if query.model.multivalue_field
           props_result = []
           result.each do |props|

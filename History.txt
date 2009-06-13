@@ -1,3 +1,6 @@
+
+* allow conditions in queries, but only of the form "<property_name> <comparator> <value> [or <property_name> <comparator> <value>]*" where comparator is one of "=", "like"
+
 version 0.2.0
 =============
 
