@@ -1,3 +1,9 @@
+version 0.3.0
+=============
+
+* added dm-core gem dependency with version below 0.10.0
+
+* added LdapArray type for resources which allow the use of the multivalue ldap attriutes
 
 * allow conditions in queries, but only of the form "<property_name> <comparator> <value> [or <property_name> <comparator> <value>]*" where comparator is one of "=", "like"
 

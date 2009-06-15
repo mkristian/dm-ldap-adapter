@@ -45,7 +45,7 @@ end
 class User
   include DataMapper::Resource
 
-  property :id,     Serial, :field => "uidnumber"
+  property :id,        Serial, :field => "uidnumber"
   property :login,     String, :field => "uid"
   property :hashed_password,  String, :field => "userpassword", :access => :private
   property :name,      String, :field => "cn"
@@ -95,7 +95,7 @@ end
 class Group
   include DataMapper::Resource
   include Slf4r::Logger
-  property :id,       Integer, :serial => true, :field => "gidnumber"
+  property :id,       Serial, :field => "gidnumber"
   property :name,     String, :field => "cn"
   
   dn_prefix { |group| "cn=#{group.name}" }

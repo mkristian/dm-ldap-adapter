@@ -24,7 +24,7 @@ DataMapper.setup(:memory, {:adapter  => 'memory'})
 
 class User
   include DataMapper::Resource
-  property :id,        Integer, :serial => true, :field => "uidnumber"
+  property :id,        Serial, :field => "uidnumber"
   property :login,     String, :field => "uid", :unique_index => true
   property :hashed_password,  String, :field => "userpassword", :access => :private
   property :name,      String, :field => "cn"
@@ -79,7 +79,7 @@ end
 
 class Role
   include DataMapper::Resource
-  property :id,       Integer, :serial => true, :field => "gidnumber"
+  property :id,       Serial, :field => "gidnumber"
   property :name,     String, :field => "cn"
   
 #  multivalue_field "memberuid"
@@ -95,7 +95,7 @@ end
 
 class Group
   include DataMapper::Resource
-  property :id,       Integer, :serial => true, :field => "gidnumber"
+  property :id,       Serial, :field => "gidnumber"
   property :name,     String, :field => "cn"
   
   dn_prefix { |group| "cn=#{group.name}" }
@@ -121,7 +121,7 @@ class GroupUser
     {:cn=>"#{group_user.group.name}",  :objectclass => "posixGroup"}
   end
 
-  #property :id, Integer, :serial => true
+  #property :id, Serial
   #property :user_id, Integer, :key => true, :field => "memberuid"
   #property :group_id, Integer, :key => true#, :field => "gidnumber"
   property :memberuid, Integer, :key => true#, :field => "memberuid"

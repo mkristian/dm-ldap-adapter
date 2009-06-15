@@ -55,9 +55,8 @@ end
 DataMapper.repository(USER_REPO) do |repository|
   repository.adapter.open_ldap_connection do
     DataMapper.repository(DATA_REPO) do
-        
-      root = User.create(:id => 0, :login => :root, :name => 'root', :password => 'none')
-      admin = Group.create(:name => :admin)
+      root = User.first(:login => 'root') || User.create(:id => 0, :login => :root, :name => 'root', :password => 'none') if root.nil?
+      admin = Group.first(:name => 'admin') || Group.create(:name => 'admin')
       root.groups << admin
 
       p DataMapper.repository(USER_REPO).identity_map(User)

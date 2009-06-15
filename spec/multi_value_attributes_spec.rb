@@ -4,7 +4,7 @@ require 'spec_helper'
 class Contact
   include DataMapper::Resource
 
-  property :id,        Integer, :serial => true, :field => "uidnumber"
+  property :id,        Serial, :field => "uidnumber"
   property :login,     String, :field => "uid", :unique_index => true
   property :hashed_password,  String, :field => "userpassword", :access => :private
   property :name,      String, :field => "cn"

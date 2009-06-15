@@ -10,7 +10,8 @@ require 'pathname'
 
 Hoe.new('dm-ldap-adapter', Ldap::VERSION) do |p|
   p.developer('mkristian', 'm.kristian@web.de')
-  p.extra_deps = ['ruby-net-ldap','slf4r']
+  p.url = "http://dm-ldap-adapter.rubyforge.org"
+  p.extra_deps = [['ruby-net-ldap', '=0.0.4'],'slf4r', ['dm-core', '<0.10.0']]
   p.remote_rdoc_dir = '' # Release to root
 end
 

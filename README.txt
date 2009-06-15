@@ -22,7 +22,7 @@ the ldap library which does the actual ldap protocol stuff is [http://rubyforge.
 
 see 'example/posix.rb' for user/group setup works with default installation of openldap on ubuntu (just change your password as needed in the code)
 
-the 'example/identity_maps.rb' shows the usage of identity maps, see also below.
+the 'example/identity_map.rb' shows the usage of identity maps, see also below.
 
 == FEATURES/PROBLEMS:
 
@@ -151,6 +151,24 @@ staying with posix example there the groups has a memberuid attribute BUT unlike
     
       multivalue_field :memberuid
           
+    end
+
+=== ldap attributes with many values
+
+let's say your LDAP has multiple email values for a users then you can define your resource class like that using the type LdapArray for such multivalue fields
+
+    class User
+      include DataMapper::Resource
+      property :id,        Serial, :field => "uidnumber"
+      property :login,     String, :field => "uid", :unique_index => true
+      property :mail,      LdapArray
+
+      dn_prefix { |user| "uid=#{user.login}"}
+      treebase "ou=people"
+      ldap_properties do |user|
+        properties = { :objectclass => ["inetOrgPerson", "posixAccount", "shadowAccount"], :loginshell => "/bin/bash", :gidnumber => "10000" }
+       properties
+      end
     end
 
 == REQUIREMENTS:
