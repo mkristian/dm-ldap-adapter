@@ -226,7 +226,8 @@ module DataMapper
                 if query.model.multivalue_field == f.field.to_sym 
                   value
                 else 
-                  item[f.field.to_sym].first 
+                  val = item[f.field.to_sym].first
+                  f.primitive == Integer ? val.to_i : val
                 end
               end
               resource = query.model.load(values, query)
@@ -240,8 +241,8 @@ module DataMapper
               val = values[f.field.to_sym]
               if f.type == DataMapper::Types::LdapArray
                 val if val
-              else
-                val.first if val
+              elsif val
+                f.primitive == Integer ? val.first.to_i : val.first
               end
             end
           end
@@ -266,7 +267,8 @@ module DataMapper
                 if query.model.multivalue_field == f.field.to_sym 
                   value
                 else 
-                  props[f.field.to_sym].first 
+                  prop = props[f.field.to_sym].first
+                  f.primitive == Integer ? prop.to_i : prop
                 end
               end
               resource = query.model.load(values, query)
@@ -278,7 +280,9 @@ module DataMapper
           result.collect do |props|
             query.fields.collect do |f|
               prop = props[f.field.to_sym]
-              prop.first if prop
+              if prop
+                f.primitive == Integer ? prop.first.to_i : prop.first
+              end
             end
           end
         end

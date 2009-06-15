@@ -32,10 +32,9 @@ class User
   property :age,       Integer, :field => "postalcode"
   property :alive,     Boolean, :field => "gecos"
 
-  has n, :roles#, :child_key => [:memberuid]
+  has n, :roles
 
-  has n, :group_users, :child_key => [:memberuid]
-#  has n, :groups, :through => :group_users, :mutable => true#, :child_key => [:gidnumber], :parent_key => [:memberuid]
+  has n, :group_users
 
   def groups
     groups = GroupUser.all(:memberuid => id).collect{ |gu| gu.group }
@@ -82,15 +81,13 @@ class Role
   property :id,       Serial, :field => "gidnumber"
   property :name,     String, :field => "cn"
   
-#  multivalue_field "memberuid"
-  
   dn_prefix { |role| "cn=#{role.name}" }
   
   treebase "ou=groups"
   
-  ldap_properties {{ :objectclass => "posixGroup"}}
+  ldap_properties {:objectclass => "posixGroup"}
 
-  belongs_to :user, :child_key => [:memberuid]
+  belongs_to :user
 end
 
 class Group
@@ -102,12 +99,9 @@ class Group
   
   treebase "ou=groups"
   
-  ldap_properties {{ :objectclass => "posixGroup"}}
-
-  has n, :users, :child_key => [:gidnumber]
- # has n, :users, :through => :group_users
+  ldap_properties {:objectclass => "posixGroup"}
 end
- 
+
 class GroupUser
   include DataMapper::Resource
  
@@ -121,28 +115,23 @@ class GroupUser
     {:cn=>"#{group_user.group.name}",  :objectclass => "posixGroup"}
   end
 
-  #property :id, Serial
-  #property :user_id, Integer, :key => true, :field => "memberuid"
-  #property :group_id, Integer, :key => true#, :field => "gidnumber"
-  property :memberuid, Integer, :key => true#, :field => "memberuid"
-  property :gidnumber, Integer, :key => true#, :field => "gidnumber"
-#  belongs_to :group, :child_key => [:gidnumber]
+  property :user_id, Integer, :key => true, :field => "memberuid"
+  property :group_id, Integer, :key => true, :field => "gidnumber"
 
   def group
-    Group.get!(gidnumber)
+    Group.get!(group_id)
   end
 
   def group=(group)
-    gidnumber = group.id
+    group_id = group.id
   end
 
   def user
-    User.get!(memberuid)
+    User.get!(user_id)
   end
 
   def user=(user)
-    memberuid = user.id
+    user_id = user.id
   end
-#  belongs_to :user, :child_key => [:memberuid]
 end
 DataMapper.auto_migrate!(:default)

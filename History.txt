@@ -1,6 +1,8 @@
 version 0.3.0
 =============
 
+* fixed bug where Serial and Integer,:serial=>true were handled differently. the Integer values are handle with all types which have an Integer as primitive
+
 * added dm-core gem dependency with version below 0.10.0
 
 * added LdapArray type for resources which allow the use of the multivalue ldap attriutes
