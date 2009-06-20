@@ -29,38 +29,71 @@ end
 
 describe DataMapper.repository(:ldap).adapter.class do
 
-  describe 'belongs_to association' do
+  describe 'LdapArray' do
 
-    before do
+    before :each do
       DataMapper.repository(:ldap) do
-#p Contact.all
-        @contact = Contact.new(:login => "beige", :name => 'Beige')
+        @contact = Contact.first(:login => "beige") || Contact.new(:login => "beige", :name => 'Beige')
         @contact.password = "asd123"
         @contact.save
       end
     end
 
-    after do
+    after :each do
       DataMapper.repository(:ldap) do
         @contact.destroy
       end
     end
 
-    it 'should create and load the association' do
+    it 'should add many values to a LdapArray' do
        DataMapper.repository(:ldap) do
         @contact.mail.should == []
+
         @contact.mail << "email1"
         @contact.save
         @contact = Contact.get!(@contact.id)
         @contact.mail.should == ["email1"]
+
         @contact.mail << "email2"
         @contact.save
         @contact = Contact.get!(@contact.id)
         @contact.mail.should == ["email1", "email2"]
+
         @contact.mail.delete("email1")
         @contact.save
         @contact = Contact.get!(@contact.id)
         @contact.mail.should == ["email2"]
+
+        @contact.mail.delete("email2")
+        @contact.save
+        @contact = Contact.get!(@contact.id)
+        @contact.mail.should == []
+      end
+    end
+
+    it 'should get an LdapArray on retrieving collection' do
+       DataMapper.repository(:ldap) do
+        @contact.mail.should == []
+
+        @contact.mail << "email1"
+        @contact.save
+        @contact = Contact.all.detect {|c| c.id = @contact.id}
+        @contact.mail.should == ["email1"]
+
+        @contact.mail << "email2"
+        @contact.save
+        @contact = Contact.all.detect {|c| c.id = @contact.id}
+        @contact.mail.should == ["email1", "email2"]
+
+        @contact.mail.delete("email1")
+        @contact.save
+        @contact = Contact.all.detect {|c| c.id = @contact.id}
+        @contact.mail.should == ["email2"]
+
+        @contact.mail.delete("email2")
+        @contact.save
+        @contact = Contact.all.detect {|c| c.id = @contact.id}
+        @contact.mail.should == []
       end
     end
   end

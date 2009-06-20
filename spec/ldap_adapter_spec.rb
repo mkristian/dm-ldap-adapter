@@ -27,6 +27,20 @@ require 'spec_helper'
       end
     end
 
+    it 'should create an uid' do
+      class User
+        # put the assert here
+        dn_prefix { |user| user.id.should_not == nil; "uid=#{user.login}"}
+      end
+
+      DataMapper.repository(adapter) do
+        id = @user1.id
+        @user1.destroy
+        @user1 = User.create(:login => "black", :name => 'Black', :age => 0)
+        @user1.id.should_not == id
+      end
+    end
+
     it 'should successfully save an object' do
       DataMapper.repository(adapter) do
         @user1.new_record?.should be_false
@@ -34,7 +48,7 @@ require 'spec_helper'
       end
     end
 
-    it 'should log when trying to create an entity with already used key' do
+    it 'should raise an error when trying to create an entity with already used key' do
       DataMapper.repository(adapter) do
        #p User.first(:login => "black")
        lambda { User.create(:login => "black", :name => 'Black', :age => 0) }.should raise_error

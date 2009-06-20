@@ -126,7 +126,12 @@ module DataMapper
           end
           key = prop if prop.serial?
         end
-        key_value = ldap.create_object(resource.model.dn_prefix(resource), 
+        resource_dup = resource.dup
+        id = ldap.retrieve_next_id(resource.model.treebase,
+                                   key_properties(resource).field)
+        resource_dup.send("#{key_properties(resource).name}=".to_sym, id)
+        props[key_properties(resource).field.to_sym] = "#{id}"
+        key_value = ldap.create_object(resource.model.dn_prefix(resource_dup),
                                        resource.model.treebase, 
                                        key_properties(resource).field, 
                                        props, resource.model.multivalue_field)
@@ -135,10 +140,12 @@ module DataMapper
           key.set!(resource, key_value.to_i) 
           resource
         elsif resource.model.multivalue_field
-          multivalue_prop = resource.send(:properties)[resource.model.multivalue_field]
+          multivalue_prop = resource.send(:properties).detect do |prop|
+            prop.field.to_sym == resource.model.multivalue_field
+          end
           update_resource(resource, 
                           { multivalue_prop => 
-                            resource.send(resource.model.multivalue_field)})
+                            resource.send(multivalue_prop.name.to_sym)})
         else
           nil
         end
@@ -171,7 +178,7 @@ module DataMapper
               array_actions
             end
           else
-            if resource.model.multivalue_field == property.name
+            if resource.model.multivalue_field == property.field.to_sym
               if value.nil?
                 actions << [:delete, field, resource.original_values[property.name].to_s]
               else
@@ -199,10 +206,13 @@ module DataMapper
       # @see SimpleAdapter#delete_resource
       def delete_resource(resource)
         if resource.model.multivalue_field
+          multivalue_prop = resource.send(:properties).detect do |prop|
+            prop.field.to_sym == resource.model.multivalue_field
+          end
           # set the original value so update does the right thing
-          resource.send("#{resource.model.multivalue_field}=".to_sym, nil)
+          resource.send("#{multivalue_prop.name}=".to_sym, nil)
           update_resource(resource, 
-                          { resource.send(:properties)[resource.model.multivalue_field] => nil })
+                          { multivalue_prop => nil })
         else
           ldap.delete_object(resource.model.dn_prefix(resource),
                              resource.model.treebase)
@@ -280,7 +290,9 @@ module DataMapper
           result.collect do |props|
             query.fields.collect do |f|
               prop = props[f.field.to_sym]
-              if prop
+              if f.type == DataMapper::Types::LdapArray
+                prop if prop
+              elsif prop
                 f.primitive == Integer ? prop.first.to_i : prop.first
               end
             end

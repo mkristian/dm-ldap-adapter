@@ -37,20 +37,20 @@ class User
   has n, :group_users
 
   def groups
-    groups = GroupUser.all(:memberuid => id).collect{ |gu| gu.group }
+    groups = GroupUser.all(:user_id => id).collect{ |gu| gu.group }
     def groups.user=(user)
       @user = user
     end
     groups.user = self
     def groups.<<(group)
       unless member? group
-        GroupUser.create(:memberuid => @user.id, :gidnumber => group.id)
+        GroupUser.create(:user_id => @user.id, :group_id => group.id)
         super
       end
       self
     end
     def groups.delete(group)
-      gu = GroupUser.first(:memberuid => @user.id, :gidnumber => group.id)
+      gu = GroupUser.first(:user_id => @user.id, :group_id => group.id)
       if gu
         gu.destroy
         super
@@ -58,7 +58,7 @@ class User
     end
     groups
   end
-
+ 
   dn_prefix { |user| "uid=#{user.login}"}
 
   treebase "ou=people"
@@ -85,7 +85,7 @@ class Role
   
   treebase "ou=groups"
   
-  ldap_properties {:objectclass => "posixGroup"}
+  ldap_properties {{:objectclass => "posixGroup"}}
 
   belongs_to :user
 end
@@ -99,7 +99,7 @@ class Group
   
   treebase "ou=groups"
   
-  ldap_properties {:objectclass => "posixGroup"}
+  ldap_properties {{:objectclass => "posixGroup"}}
 end
 
 class GroupUser

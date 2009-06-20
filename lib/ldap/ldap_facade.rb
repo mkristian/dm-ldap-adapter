@@ -21,12 +21,7 @@ module Ldap
       end
     end
 
-    # @param dn_prefix String the prefix of the dn
-    # @param treebase the treebase of the dn or any search
-    # @param key_field field which carries the integer unique id of the entity
-    # @param props Hash of the ldap attributes of the new ldap object
-    # @return nil in case of an error or the new id of the created object
-    def create_object(dn_prefix, treebase, key_field, props, silence = false)
+    def retrieve_next_id(treebase, key_field)
       base = "#{treebase},#{@ldap.base}"
       id_sym = key_field.downcase.to_sym
       max = 0
@@ -36,11 +31,19 @@ module Ldap
         n = entry[id_sym].first.to_i
         max = n if max < n
       end
-      id = max + 1
-      props[id_sym] = "#{id}"
+      max + 1
+    end
+
+    # @param dn_prefix String the prefix of the dn
+    # @param treebase the treebase of the dn or any search
+    # @param key_field field which carries the integer unique id of the entity
+    # @param props Hash of the ldap attributes of the new ldap object
+    # @return nil in case of an error or the new id of the created object
+    def create_object(dn_prefix, treebase, key_field, props, silence = false)
+      base = "#{treebase},#{@ldap.base}"
       if @ldap.add( :dn => dn(dn_prefix, treebase), 
                     :attributes => props) and @ldap.get_operation_result.code.to_s == "0"
-        id
+        props[key_field.downcase.to_sym]
       else
         unless silence
           msg = ldap_error("create", 
