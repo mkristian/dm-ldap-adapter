@@ -6,7 +6,7 @@ class Contact
 
   property :id,        Serial, :field => "uidnumber"
   property :login,     String, :field => "uid", :unique_index => true
-  property :hashed_password,  String, :field => "userpassword", :access => :private
+  property :hashed_password,  String, :field => "userpassword", :access => :private, :lazy => true
   property :name,      String, :field => "cn"
   property :mail,      LdapArray
 

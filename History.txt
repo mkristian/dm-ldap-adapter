@@ -1,3 +1,19 @@
+version 0.3.2
+=============
+
+* lazy property are not loaded from ldap anymore
+
+* new facade which uses ruby-ldap, since it has better support for ldap protocol and is about 30% faster with search queries
+
+version 0.3.1
+=============
+
+* fixed LdapArray bug in collections
+
+* default of LdapArray is now a new object for each resource instance
+
+* allow Serial to be used in dn_prefix
+
 version 0.3.0
 =============
 

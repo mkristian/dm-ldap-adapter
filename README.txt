@@ -88,7 +88,17 @@ and
 
 gives the same result when *all* names are `NULL` !!!
 
-OR conditions can be done with :conditions option but only of the form "<property_name> <comparator> <value> [or <property_name> <comparator> <value>]*" where the comparator is one of "=", "like"
+=== OR conditions
+
+or-conditions can be done with :conditions option but only of the form "<property_name> <comparator> <value> [or <property_name> <comparator> <value>]*" where the comparator is one of "=", "like". it can be also combined with extra ANDs like this example
+
+    Contact.all(:name.like => "A%", :conditions => ["phone like '+49%' or mobile like '+49%'"])
+
+=== using the ruby-ldap gem
+
+just require the right facade before require the adapter:
+
+    require 'ldap/ruby_ldap_facade'
 
 === multiple repositories
 

@@ -19,6 +19,10 @@ dummy = true  #uncomment this to use dummy, i.e. a database instead of ldap
 dummy = false # uncomment this to use ldap
 unless dummy
   require 'ldap_resource'
+
+  # comment this out if you want to use "net/ldap"
+  require 'ldap/ruby_ldap_facade'
+
   require 'adapters/ldap_adapter'
 
   DataMapper.setup(:default, {

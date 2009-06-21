@@ -1,6 +1,6 @@
 require 'adapters/simple_adapter'
 # load the ldap facade only if NOT loaded before
-require 'ldap/ldap_facade' unless Object.const_defined?('Ldap') and Ldap.const_defined?('LdapFacade')
+require 'ldap/net_ldap_facade' unless Object.const_defined?('Ldap') and Ldap.const_defined?('LdapFacade')
 
 module Ldap
 
@@ -131,10 +131,15 @@ module DataMapper
                                    key_properties(resource).field)
         resource_dup.send("#{key_properties(resource).name}=".to_sym, id)
         props[key_properties(resource).field.to_sym] = "#{id}"
-        key_value = ldap.create_object(resource.model.dn_prefix(resource_dup),
-                                       resource.model.treebase, 
-                                       key_properties(resource).field, 
-                                       props, resource.model.multivalue_field)
+        key_value = begin
+                      ldap.create_object(resource.model.dn_prefix(resource_dup),
+                                         resource.model.treebase,
+                                         key_properties(resource).field,
+                                         props, resource.model.multivalue_field)
+                    rescue => e
+                      raise e unless resource.model.multivalue_field
+                      # TODO something with creating these multivalue objects
+                    end
         logger.debug { "resource #{resource.inspect} key value: #{key_value.inspect}" + ", multivalue_field: " + resource.model.multivalue_field.to_s }
         if key_value and !key.nil?
           key.set!(resource, key_value.to_i) 
@@ -225,9 +230,11 @@ module DataMapper
       #   the found resource or nil
       # @see SimpleAdapter#read_resource
       def read_resource(query)  
+        field_names = query.fields.collect {|f| f.field }
         result = ldap.read_objects(query.model.treebase, 
                                    query.model.key.collect { |k| k.field}, 
-                                   to_ldap_conditions(query))
+                                   to_ldap_conditions(query),
+                                   field_names)
         if query.model.multivalue_field
           resource = result.detect do |item|
             # run over all values of the multivalue field
@@ -265,14 +272,16 @@ module DataMapper
       #   the array of found resources
       # @see SimpleAdapter#read_resources
       def read_resources(query)     
+        field_names = query.fields.collect {|f| f.field }
         result = ldap.read_objects(query.model.treebase, 
                                    query.model.key.collect { |k| k.field }, 
-                                   to_ldap_conditions(query))
+                                   to_ldap_conditions(query),
+                                   field_names)
         if query.model.multivalue_field
           props_result = []
           result.each do |props|
             # run over all values of the multivalue field
-            props[query.model.multivalue_field].each do |value|
+            (props[query.model.multivalue_field] || []).each do |value|
               values =  query.fields.collect do |f|
                 if query.model.multivalue_field == f.field.to_sym 
                   value

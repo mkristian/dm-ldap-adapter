@@ -1,6 +1,7 @@
 History.txt
 MIT-LICENSE
 Manifest.txt
+Manifest.txt-
 README-example.markdown
 README.txt
 Rakefile
@@ -13,9 +14,12 @@ lib/adapters/simple_adapter.rb
 lib/dummy_ldap_resource.rb
 lib/ldap/array.rb
 lib/ldap/digest.rb
-lib/ldap/ldap_facade.rb
+lib/ldap/net_ldap_facade.rb
+lib/ldap/ruby_ldap_facade.rb
 lib/ldap/version.rb
 lib/ldap_resource.rb
+net-ldap.txt
+ruby-ldap.txt
 spec/assiociations_ldap_adapter_spec.rb
 spec/authentication_ldap_adapter_spec.rb
 spec/ldap_adapter_spec.rb

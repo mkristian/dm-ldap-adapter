@@ -63,7 +63,7 @@ module Ldap
     # @param key_fields Array of fields which carries the integer unique id(s) of the entity
     # @param Array of conditions for the search
     # @return Array of Hashes with a name/values pair for each attribute
-    def read_objects(treebase, key_fields, conditions)
+    def read_objects(treebase, key_fields, conditions, field_names)
       filters = []
       conditions.each do |cond|
         c = cond[2]
@@ -146,6 +146,7 @@ module Ldap
       logger.debug { "search filter: (#{filter.to_s})" }
       result = []
       @ldap.search( :base => "#{treebase},#{@ldap.base}",
+                    :attributes => field_names,
                     :filter => filter ) do |res|
         map = to_map(res) 
         #puts map[key_field.to_sym]
