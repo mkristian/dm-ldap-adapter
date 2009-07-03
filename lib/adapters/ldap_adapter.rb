@@ -271,12 +271,13 @@ module DataMapper
       # @return [Array<DataMapper::Resource]
       #   the array of found resources
       # @see SimpleAdapter#read_resources
-      def read_resources(query)     
+      def read_resources(query)
+        order_by = query.order.first.property.field
         field_names = query.fields.collect {|f| f.field }
         result = ldap.read_objects(query.model.treebase, 
                                    query.model.key.collect { |k| k.field }, 
                                    to_ldap_conditions(query),
-                                   field_names)
+                                   field_names, order_by)
         if query.model.multivalue_field
           props_result = []
           result.each do |props|

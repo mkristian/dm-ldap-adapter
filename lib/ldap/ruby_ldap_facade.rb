@@ -83,7 +83,7 @@ module Ldap
     # @param key_fields Array of fields which carries the integer unique id(s) of the entity
     # @param Array of conditions for the search
     # @return Array of Hashes with a name/values pair for each attribute
-    def read_objects(treebase, key_fields, conditions, field_names)
+    def read_objects(treebase, key_fields, conditions, field_names, order_field = '')
       filters = []
       conditions.each do |cond|
         c = cond[2]
@@ -169,7 +169,7 @@ module Ldap
       @ldap2.search("#{treebase},#{@ldap2.base}", 
                     LDAP::LDAP_SCOPE_SUBTREE, 
                     filter.to_s == "" ? "(objectclass=*)" : filter.to_s.gsub(/\(\(/, "(").gsub(/\)\)/, ")"), 
-                    field_names) do |res|
+                    field_names, false, 0, 0, order_field) do |res|
 
         map = to_map(res) 
         #puts map[key_field.to_sym]

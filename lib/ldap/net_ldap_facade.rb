@@ -63,7 +63,7 @@ module Ldap
     # @param key_fields Array of fields which carries the integer unique id(s) of the entity
     # @param Array of conditions for the search
     # @return Array of Hashes with a name/values pair for each attribute
-    def read_objects(treebase, key_fields, conditions, field_names)
+    def read_objects(treebase, key_fields, conditions, field_names, order_field = nil)
       filters = []
       conditions.each do |cond|
         c = cond[2]

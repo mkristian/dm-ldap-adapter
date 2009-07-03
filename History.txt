@@ -1,3 +1,10 @@
+version 0.3.3
+=============
+
+* fix bug with empty LdapArray for ruby-ldap-adapter
+
+* added order option to search with just using the first order attribute and ignoring the direction and other attributes
+
 version 0.3.2
 =============
 

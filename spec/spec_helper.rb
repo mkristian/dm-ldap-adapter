@@ -6,8 +6,8 @@ require 'do_sqlite3'
 require 'pathname'
 $LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
 
+#require 'ldap/ruby_ldap_facade'
 require 'ldap_resource'
-#require 'ldap_facade_mock' # uncomment this to use the mock facade
 require 'adapters/ldap_adapter'
 require 'adapters/memory_adapter'
 

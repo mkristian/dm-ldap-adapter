@@ -16,7 +16,9 @@ the usecase for that implementation was using an ldap server for user authentica
 
 === low level ldap library
 
-the ldap library which does the actual ldap protocol stuff is [http://rubyforge.org/projects/net-ldap] and it is hidden behind a facade, so one could replace it with a different library or make it pluggable.
+the ldap library which does the actual ldap protocol stuff is [http://rubyforge.org/projects/net-ldap] which is the default. the other ldap library is [http://rubyforge.org/projects/ruby-ldap]. these libraries are behind a facade, if you want to use the ruby-ldap library you need to require the right facade before the ldap-adapter:
+
+    require 'ldap/ruby_ldap_facade'
 
 === examples
 
@@ -26,9 +28,9 @@ the 'example/identity_map.rb' shows the usage of identity maps, see also below.
 
 == FEATURES/PROBLEMS:
 
-* the net-ldap has some issues with not closing the connections when an exception/error got raised
+* the net-ldap has some issues with not closing the connections when an exception/error got raised, with limit the search result to 126 entries which gets fixed by making consecutives searches and collect the result.
 
-* error from the ldap server are only logged and do not raise any exceptions (to be changed in next release)
+* error from the ldap server are only logged and do not raise any exceptions (to be changed in next release) with one exception: when creating a new ldap entry a duplicated entry will raise DataMapper::PersistenceError
 
 == SYNOPSIS:
 
@@ -165,7 +167,7 @@ staying with posix example there the groups has a memberuid attribute BUT unlike
 
 === ldap attributes with many values
 
-let's say your LDAP has multiple email values for a users then you can define your resource class like that using the type LdapArray for such multivalue fields
+let's say your LDAP has multiple email values for a users then you can define your resource class like that using the type *LdapArray* for such multivalue fields
 
     class User
       include DataMapper::Resource

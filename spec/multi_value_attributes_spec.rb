@@ -33,7 +33,8 @@ describe DataMapper.repository(:ldap).adapter.class do
 
     before :each do
       DataMapper.repository(:ldap) do
-        @contact = Contact.first(:login => "beige") || Contact.new(:login => "beige", :name => 'Beige')
+        Contact.all(:login => "beige").destroy!
+        @contact =  Contact.new(:login => "beige", :name => 'Beige')
         @contact.password = "asd123"
         @contact.save
       end
@@ -72,7 +73,7 @@ describe DataMapper.repository(:ldap).adapter.class do
     end
 
     it 'should get an LdapArray on retrieving collection' do
-       DataMapper.repository(:ldap) do
+      DataMapper.repository(:ldap) do
         @contact.mail.should == []
 
         @contact.mail << "email1"
@@ -94,6 +95,17 @@ describe DataMapper.repository(:ldap).adapter.class do
         @contact.save
         @contact = Contact.all.detect {|c| c.id = @contact.id}
         @contact.mail.should == []
+      end
+    end
+
+    it 'should allow to replace the LdapArray' do
+      DataMapper.repository(:ldap) do
+        @contact = Contact.get(@contact.id)
+        @contact.mail.should == []
+        @contact.mail = ['foo', 'bar']
+        @contact.save
+        @contact = Contact.get(@contact.id)
+        @contact.mail.should == ['foo', 'bar']
       end
     end
   end

@@ -92,7 +92,7 @@ require 'spec_helper'
         @user1.groups << @group2
         @user1.save
         User.get(@user1.id)
-        @user1.groups.should == [@group1, @group2]
+        @user1.groups.sort{|g1, g2| g1.id <=> g2.id}.should == [@group1, @group2]
         @user1.groups.delete(@group1)
         @user1.save
         User.get(@user1.id).groups.should == [@group2]
@@ -109,13 +109,13 @@ require 'spec_helper'
         @user1.groups << @group1
         @user1.groups << @group2
         @user1.save
-        User.get(@user1.id).groups.should == [@group1, @group2]
+        User.get(@user1.id).groups.sort{|g1, g2| g1.id <=> g2.id}.should == [@group1, @group2]
         @user2.groups << @group1
         @user2.save
       end
       DataMapper.repository(adapter) do
         User.get(@user2.id).groups.should == [@group1]
-        User.get(@user1.id).groups.should == [@group1, @group2]
+        User.get(@user1.id).groups.sort{|g1, g2| g1.id <=> g2.id}.should == [@group1, @group2]
       end
     end
     
@@ -130,11 +130,11 @@ require 'spec_helper'
         @user1 = User.get!(@user1.id)
         @user1.groups << @group1
         @user1.groups << @group2
-        @user1.groups.should == [@group1, @group2]
+        @user1.groups.sort{|g1, g2| g1.id <=> g2.id}.should == [@group1, @group2]
         @user2.groups << @group1
       end
       DataMapper.repository(adapter) do
-        User.get(@user1.id).groups.should == [@group1, @group2]
+        User.get(@user1.id).groups.sort{|g1, g2| g1.id <=> g2.id}.should == [@group1, @group2]
         User.get(@user2.id).groups.should == [@group1]
       end
     end

@@ -18,14 +18,12 @@ lib/ldap/net_ldap_facade.rb
 lib/ldap/ruby_ldap_facade.rb
 lib/ldap/version.rb
 lib/ldap_resource.rb
-net-ldap.txt
-ruby-ldap.txt
 spec/assiociations_ldap_adapter_spec.rb
 spec/authentication_ldap_adapter_spec.rb
 spec/ldap_adapter_spec.rb
 spec/multi_repository_spec.rb
 spec/multi_value_attributes_spec.rb
+spec/sorting_spec.rb
 spec/spec.opts
 spec/spec_helper.rb
-test.db
 test.ldif
