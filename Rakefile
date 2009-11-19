@@ -8,10 +8,10 @@ require 'spec'
 require 'spec/rake/spectask'
 require 'pathname'
 
-Hoe.new('dm-ldap-adapter', Ldap::VERSION) do |p|
+Hoe.spec('dm-ldap-adapter') do |p|
   p.developer('mkristian', 'm.kristian@web.de')
   p.url = "http://dm-ldap-adapter.rubyforge.org"
-  p.extra_deps = [['ruby-net-ldap', '=0.0.4'],'slf4r', ['dm-core', '<0.10.0']]
+  p.extra_deps = [['ruby-net-ldap', '=0.0.4'],['slf4r', '>=0'], ['dm-core', '<0.10.0']]
   p.remote_rdoc_dir = '' # Release to root
 end
 
