@@ -1,12 +1,15 @@
 require 'rubygems'
 
 require 'slf4r/ruby_logger'
-Slf4r::LoggerFacade4RubyLogger.level = ::Logger::DEBUG
+Slf4r::LoggerFacade4RubyLogger.level = :info
+
+gem 'dm-core', "<0.10.0"
+gem 'do_sqlite3', "<0.10.0"
+
 require 'do_sqlite3'
 require 'pathname'
 $LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
 
-#require 'ldap/ruby_ldap_facade'
 require 'ldap_resource'
 require 'adapters/ldap_adapter'
 require 'adapters/memory_adapter'
@@ -17,6 +20,7 @@ DataMapper.setup(:ldap, {
                    :host => 'localhost',
                    :port => '389',
                    :base => "dc=example,dc=com",
+                   :facade => :net_ldap,
                    :bind_name => "cn=admin,dc=example,dc=com",
                    :password => "behappy"   
 })

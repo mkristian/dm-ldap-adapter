@@ -11,7 +11,7 @@ class Order
   end
 end
 
-DataMapper.auto_migrate!(:default)
+Order.auto_migrate!(:default)
 
 describe DataMapper.repository(:ldap).adapter do
 

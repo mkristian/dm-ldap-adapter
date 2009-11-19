@@ -130,6 +130,7 @@ require 'spec_helper'
           User.all(:conditions => ["name like 'Bl%'"]).should == [@user1, @user3]
           User.all(:conditions => ["name like 'B%'"]).should == [@user1, @user2, @user3]
           User.all(:conditions => ["name like 'X%X_X'"]).should == []
+User.all(:conditions => ["name like 'Bla%' or name like 'Br%'"]).should == [@user1, @user2]
         end
       end
     end

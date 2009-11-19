@@ -17,7 +17,7 @@ module Ldap
     
   end
 
-  class LdapFacade
+  class RubyLdapFacade
     
     # @param config Hash for the ldap connection
     def self.open(config)
@@ -95,11 +95,11 @@ module Ldap
                  when :eql
                    Net::LDAP::Filter.eq( cc[1].to_s, cc[2].to_s )
                  when :gte
-                   f = Net::LDAP::Filter.ge( cc[1].to_s, cc[2].to_s )
+                   Net::LDAP::Filter.ge( cc[1].to_s, cc[2].to_s )
                  when :lte
-                   f = Net::LDAP::Filter.le( cc[1].to_s, cc[2].to_s )
+                   Net::LDAP::Filter.le( cc[1].to_s, cc[2].to_s )
                  when :like
-                   f = Net::LDAP::Filter.eq( cc[1].to_s, cc[2].to_s.gsub(/%/, "*").gsub(/_/, "*").gsub(/\*\*/, "*") )
+                   Net::LDAP::Filter.eq( cc[1].to_s, cc[2].to_s.gsub(/%/, "*").gsub(/_/, "*").gsub(/\*\*/, "*") )
                  else
                    logger.error(cc[0].to_s + " needs coding")
                  end
@@ -154,7 +154,7 @@ module Ldap
         end
         filters << f if f
       end
-      
+
       filter = nil
       filters.each do |f|
         if filter.nil?
