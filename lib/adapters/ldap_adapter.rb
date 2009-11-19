@@ -1,6 +1,4 @@
 require 'adapters/simple_adapter'
-# load the ldap facade only if NOT loaded before
-require 'ldap/net_ldap_facade' unless Object.const_defined?('Ldap') and Ldap.const_defined?('LdapFacade')
 
 module Ldap
 
@@ -11,6 +9,22 @@ module Ldap
     include ::Slf4r::Logger
 
     def initialize(uri)
+      if uri[:facade].nil?
+        require 'ldap/net_ldap_facade'
+        @facade = ::Ldap::NetLdapFacade
+      else
+        case uri[:facade].to_sym
+        when :ruby_ldap
+          require 'ldap/ruby_ldap_facade'
+          @facade = ::Ldap::RubyLdapFacade
+        when :net_ldap
+          require 'ldap/net_ldap_facade'
+          @facade = ::Ldap::NetLdapFacade
+        else
+          "please add a :facade parameter to the adapter setup. possible values are :ruby_ldap or net_ldap"
+        end
+      end
+      logger.info("using #{@facade}")
       @ldaps = { }
       auth =  { 
         :method => :simple,
@@ -29,8 +43,8 @@ module Ldap
     # given block.
     def open
       begin
-        Ldap::LdapFacade.open(@config) do |ldap|
-          @ldaps[Thread.current] = Ldap::LdapFacade.new(ldap)
+        @facade.open(@config) do |ldap|
+          @ldaps[Thread.current] = @facade.new(ldap)
           yield
         end
       ensure
@@ -45,7 +59,7 @@ module Ldap
       if ldap
         ldap
       else
-        Ldap::LdapFacade.new(@config)
+        @facade.new(@config)
       end
     end
   end
@@ -273,11 +287,14 @@ module DataMapper
       # @see SimpleAdapter#read_resources
       def read_resources(query)
         order_by = query.order.first.property.field
+        order_by_sym = order_by.to_sym
         field_names = query.fields.collect {|f| f.field }
         result = ldap.read_objects(query.model.treebase, 
                                    query.model.key.collect { |k| k.field }, 
                                    to_ldap_conditions(query),
-                                   field_names, order_by)
+                                   field_names, order_by).sort! do |u1, u2|
+            u1[order_by_sym].first.upcase <=> u2[order_by_sym].first.upcase rescue -1
+          end
         if query.model.multivalue_field
           props_result = []
           result.each do |props|
