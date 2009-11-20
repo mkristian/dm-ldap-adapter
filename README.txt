@@ -16,9 +16,31 @@ the usecase for that implementation was using an ldap server for user authentica
 
 === low level ldap library
 
-the ldap library which does the actual ldap protocol stuff is [http://rubyforge.org/projects/net-ldap] which is the default. the other ldap library is [http://rubyforge.org/projects/ruby-ldap]. these libraries are behind a facade, if you want to use the ruby-ldap library you need to require the right facade before the ldap-adapter:
+the ldap library which does the actual ldap protocol stuff is [http://rubyforge.org/projects/net-ldap] which is the default. the other ldap library is [http://rubyforge.org/projects/ruby-ldap]. just add a facade parameter when setting up DataMapper
 
-    require 'ldap/ruby_ldap_facade'
+    DataMapper.setup(:ldap, {
+                   :adapter  => 'ldap',
+                   :facade => :ruby_ldap,
+		   .... })
+
+or
+
+    DataMapper.setup(:ldap, {
+                   :adapter  => 'ldap',
+                   :facade => :net_ldap,
+		   .... })
+
+=== setup DataMapper
+
+    DataMapper.setup(:ldap, {
+                   :adapter  => 'ldap',
+                   :host => 'localhost',
+                   :port => '389',
+                   :base => "dc=example,dc=com",
+                   :facade => :ruby_ldap,
+                   :bind_name => "cn=admin,dc=example,dc=com",
+                   :password => "behappy"
+		   })
 
 === examples
 
@@ -95,12 +117,6 @@ gives the same result when *all* names are `NULL` !!!
 or-conditions can be done with :conditions option but only of the form "<property_name> <comparator> <value> [or <property_name> <comparator> <value>]*" where the comparator is one of "=", "like". it can be also combined with extra ANDs like this example
 
     Contact.all(:name.like => "A%", :conditions => ["phone like '+49%' or mobile like '+49%'"])
-
-=== using the ruby-ldap gem
-
-just require the right facade before require the adapter:
-
-    require 'ldap/ruby_ldap_facade'
 
 === multiple repositories
 
@@ -187,6 +203,7 @@ let's say your LDAP has multiple email values for a users then you can define yo
 
 * slf4r the logging facade
 * net-ldap pure ruby ldap library
+* ruby-ldap (optional) ruby with native ldap code
 * logging (optional) if logging via logging is desired
 * log4r (optional) if logging via log4r is desired
 

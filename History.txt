@@ -1,3 +1,12 @@
+version 0.3.4
+=============
+
+* fixed bug with or condition
+
+* sort now case insensitive
+
+* added setup parameter to choose the facade the ldap adapter shall use
+
 version 0.3.3
 =============
 
