@@ -293,8 +293,10 @@ module DataMapper
                                    query.model.key.collect { |k| k.field }, 
                                    to_ldap_conditions(query),
                                    field_names, order_by).sort! do |u1, u2|
-            u1[order_by_sym].first.upcase <=> u2[order_by_sym].first.upcase rescue -1
-          end
+          value1 = u1[order_by_sym].first.upcase rescue ""
+          value2 = u2[order_by_sym].first.upcase rescue ""
+          value1 <=> value2
+        end
         if query.model.multivalue_field
           props_result = []
           result.each do |props|

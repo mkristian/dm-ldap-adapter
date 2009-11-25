@@ -9,6 +9,7 @@ require 'spec/rake/spectask'
 require 'pathname'
 
 Hoe.spec('dm-ldap-adapter') do |p|
+  p.description = "ldap adapter for datamapper which uses either net-ldap or ruby-ldap"
   p.developer('mkristian', 'm.kristian@web.de')
   p.url = "http://dm-ldap-adapter.rubyforge.org"
   p.extra_deps = [['ruby-net-ldap', '=0.0.4'],['slf4r', '>=0'], ['dm-core', '<0.10.0']]

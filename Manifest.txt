@@ -1,7 +1,6 @@
 History.txt
 MIT-LICENSE
 Manifest.txt
-Manifest.txt-
 README-example.markdown
 README.txt
 Rakefile
