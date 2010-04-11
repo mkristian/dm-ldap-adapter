@@ -1,6 +1,6 @@
 require 'ldap'
-require 'net/ldap'
 require 'slf4r'
+require 'ldap/conditions_2_filter'
 
 module Ldap
   class Connection < LDAP::Conn
@@ -59,7 +59,7 @@ module Ldap
     def create_object(dn_prefix, treebase, key_field, props, silence = false)
       base = "#{treebase},#{@ldap2.base}"
       mods = props.collect do |k,v|
-        LDAP.mod(LDAP::LDAP_MOD_ADD, k.to_s, v.is_a?(Array) ? v : [v.to_s] )
+        LDAP.mod(LDAP::LDAP_MOD_ADD, k.to_s, v.is_a?(::Array) ? v : [v.to_s] )
       end
       if @ldap2.add( dn(dn_prefix, treebase), mods)
 #                    :attributes => props) and @ldap.get_operation_result.code.to_s == "0"
@@ -83,87 +83,8 @@ module Ldap
     # @param key_fields Array of fields which carries the integer unique id(s) of the entity
     # @param Array of conditions for the search
     # @return Array of Hashes with a name/values pair for each attribute
-    def read_objects(treebase, key_fields, conditions, field_names, order_field = '')
-      filters = []
-      conditions.each do |cond|
-        c = cond[2]
-        case cond[0]
-        when :or_operator
-          f = nil
-          cond[1].each do |cc|
-            ff = case cc[0]
-                 when :eql
-                   Net::LDAP::Filter.eq( cc[1].to_s, cc[2].to_s )
-                 when :gte
-                   Net::LDAP::Filter.ge( cc[1].to_s, cc[2].to_s )
-                 when :lte
-                   Net::LDAP::Filter.le( cc[1].to_s, cc[2].to_s )
-                 when :like
-                   Net::LDAP::Filter.eq( cc[1].to_s, cc[2].to_s.gsub(/%/, "*").gsub(/_/, "*").gsub(/\*\*/, "*") )
-                 else
-                   logger.error(cc[0].to_s + " needs coding")
-                 end
-            if f
-              f = f | ff
-            else
-              f = ff
-            end
-          end
-        when :eql
-          if c.nil?
-            f = ~ Net::LDAP::Filter.pres( cond[1].to_s )
-          elsif c.class == Array
-            f = nil
-            c.each do |cc|
-              if f
-                f = f | Net::LDAP::Filter.eq( cond[1].to_s, cc.to_s )
-              else
-                f = Net::LDAP::Filter.eq( cond[1].to_s, cc.to_s )
-              end
-            end
-            #elsif c.class == Range
-            #  p c
-            #  f = Net::LDAP::Filter.ge( cond[1].to_s, c.begin.to_s ) & Net::LDAP::Filter.le( cond[1].to_s, c.end.to_s )
-          else
-            f = Net::LDAP::Filter.eq( cond[1].to_s, c.to_s )
-          end
-        when :gte
-          f = Net::LDAP::Filter.ge( cond[1].to_s, c.to_s )
-        when :lte
-          f = Net::LDAP::Filter.le( cond[1].to_s, c.to_s )
-        when :not
-            if c.nil?
-              f = Net::LDAP::Filter.pres( cond[1].to_s )
-            elsif c.class == Array
-              f = nil
-              c.each do |cc|
-              if f
-                f = f | Net::LDAP::Filter.eq( cond[1].to_s, cc.to_s )
-              else
-                f = Net::LDAP::Filter.eq( cond[1].to_s, cc.to_s )
-              end
-            end
-              f = ~ f
-            else
-              f = ~ Net::LDAP::Filter.eq( cond[1].to_s, c.to_s )
-            end
-        when :like
-          f = Net::LDAP::Filter.eq( cond[1].to_s, c.to_s.gsub(/%/, "*").gsub(/_/, "*").gsub(/\*\*/, "*") )
-        else
-          logger.error(cond[0].to_s + " needs coding")
-        end
-        filters << f if f
-      end
-
-      filter = nil
-      filters.each do |f|
-        if filter.nil?
-          filter = f
-        else
-          filter = filter & f
-        end
-      end
-      logger.debug { "search filter: (#{filter.to_s})" }
+    def read_objects(treebase, key_fields, conditions, field_names, order_field = '')      
+      filter = Conditions2Filter.convert(conditions)
       result = []
       begin
       @ldap2.search("#{treebase},#{@ldap2.base}",

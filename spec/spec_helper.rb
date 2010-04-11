@@ -19,7 +19,7 @@ DataMapper.setup(:ldap, {
                    :host => 'localhost',
                    :port => '389',
                    :base => "dc=example,dc=com",
-#                   :facade => :ruby_ldap,
+                   :facade => (ENV['FACADE'] || :net_ldap).to_sym,
                    :bind_name => "cn=admin,dc=example,dc=com",
                    :password => "behappy"
 })

@@ -5,17 +5,10 @@ describe DataMapper::Adapters::LdapAdapter do
 
   before(:each) do
     DataMapper.repository(:ldap) do
+      User.all.destroy!
       @user1 = User.create(:login => "black", :name => 'Black', :age => 0)
       @user2 = User.create(:login => "brown", :name => 'Brown', :age => 25)
       @user3 = User.create(:login => "blue", :name => 'Blue',  :age => nil)
-    end
-  end
-
-  after(:each) do
-    DataMapper.repository(:ldap) do
-      @user1.destroy
-      @user2.destroy
-      @user3.destroy
     end
   end
 
