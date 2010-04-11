@@ -4,7 +4,7 @@
 
 *Git*:       [http://github.com/mkristian/dm-ldap-adapter]
 
-*Author*:    Kristian Meier  
+*Author*:    Kristian Meier
 
 *Copyright*: 2008-2009
 
@@ -21,14 +21,14 @@ the ldap library which does the actual ldap protocol stuff is [http://rubyforge.
     DataMapper.setup(:ldap, {
                    :adapter  => 'ldap',
                    :facade => :ruby_ldap,
-		   .... })
+     .... })
 
 or
 
     DataMapper.setup(:ldap, {
                    :adapter  => 'ldap',
                    :facade => :net_ldap,
-		   .... })
+     .... })
 
 === setup DataMapper
 
@@ -40,7 +40,7 @@ or
                    :facade => :ruby_ldap,
                    :bind_name => "cn=admin,dc=example,dc=com",
                    :password => "behappy"
-		   })
+     })
 
 === examples
 
@@ -92,8 +92,8 @@ this uses the underlying bind of a ldap connection. so on any model where you ha
 
 === queries
 
-conditions in ldap depend on the attributes definition in the ldap schema. here is the list of what is working with that ldap adapter side and the usual AND between the conditions:  
-                                                               
+conditions in ldap depend on the attributes definition in the ldap schema. here is the list of what is working with that ldap adapter side and the usual AND between the conditions:
+
 * :eql
 * :not
 * :like
@@ -123,14 +123,14 @@ or-conditions can be done with :conditions option but only of the form "<propert
 most probably you have to work with ldap as one repository and a database as a second repository. for me it worked best to define the `default_repository` for each model in the model itself:
 
     class User
-      . . .     
+      . . .
       def self.default_repository_name
         :ldap
       end
     end
 
     class Config
-      . . .   
+      . . .
       def self.default_repository_name
         :db
       end
@@ -139,13 +139,13 @@ most probably you have to work with ldap as one repository and a database as a s
 if you want to benefit from the advantages of the identidy maps you need to wrap your actions for *merb* see http://www.datamapper.org/doku.php?id=docs:identity_map or for *rails* put an `around_filter` inside application.rb
 
      around_filter :repositories
-     
+
      def repositories
        DataMapper.repository(:ldap) do
          DataMapper.repository(:db) do
            yield
-         end 
-       end 
+         end
+       end
      end
 
 and to let the ldap resources use the ldap respository it is best to bind it to that repository like this
@@ -156,7 +156,7 @@ and to let the ldap resources use the ldap respository it is best to bind it to 
       :ldap
     end
   end
-   
+
 === transactions
 
 the adapter offers a noop transaction, i.e. you can wrap everything into a transaction but the ldap part has no functionality.
@@ -168,7 +168,7 @@ the adapter offers a noop transaction, i.e. you can wrap everything into a trans
 staying with posix example there the groups has a memberuid attribute BUT unlike with relational databases it can have multiple values. to achieve a relationship with these values the underlying adapter needs to know that this specific attribute needs to be handled differently. for this `multivalue_field` comes into play. the ldap adapter clones the model and places the each memberuid in its own clone.
 
     class GroupUser
-      include DataMapper::Resource    
+      include DataMapper::Resource
       property :memberuid, String, :key => true
       property :gidnumber, Integer, :key => true
       dn_prefix { |group_user| "cn=#{group_user.group.name}" }
@@ -176,9 +176,9 @@ staying with posix example there the groups has a memberuid attribute BUT unlike
       ldap_properties do |group_user|
         {:cn=>"#{group_user.group.name}",  :objectclass => "posixGroup"}
       end
-    
+
       multivalue_field :memberuid
-          
+
     end
 
 === ldap attributes with many values

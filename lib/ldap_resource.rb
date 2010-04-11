@@ -3,11 +3,22 @@ require 'dm-core'
 require 'ldap/array'
 
 module DataMapper
-  module Resource
-    module ClassMethods
-      
+  module Model
+    module LdapResource
+
+      Model.append_inclusions self
+
+      # authenticate the current resource against the stored password
+      # @param [String] password to authenticate
+      # @return [TrueClass, FalseClass] whether password was right or wrong
+      def authenticate(password)
+        ldap.authenticate(ldap.dn(self.class.dn_prefix(self),
+                                  self.class.treebase),
+                          password)
+      end
+
       # if called without parameter or block the given properties get returned.
-      # if called with a block then the block gets stored. if called with new 
+      # if called with a block then the block gets stored. if called with new
       # properties they get stored. if called with a Resource then either the
       # stored block gets called with that Resource or the stored properties get
       # returned.
@@ -27,9 +38,9 @@ module DataMapper
           @ldap_properties = block
         end
       end
-      
+
       # if called without parameter or block the given treebase gets returned.
-      # if called with a block then the block gets stored. if called with a 
+      # if called with a block then the block gets stored. if called with a
       # String then it gets stored. if called with a Resource then either the
       # stored block gets called with that Resource or the stored String gets
       # returned.
@@ -53,9 +64,9 @@ module DataMapper
           end
         end
       end
-      
+
       # if called without parameter or block the given dn_prefix gets returned.
-      # if called with a block then the block gets stored. if called with a 
+      # if called with a block then the block gets stored. if called with a
       # String then it gets stored. if called with a Resource then either the
       # stored block gets called with that Resource or the stored String gets
       # returned.
@@ -75,8 +86,8 @@ module DataMapper
           @ldap_dn = block
         end
       end
-      
-      # if called without parameter then the stored field gets returned 
+
+      # if called without parameter then the stored field gets returned
       # otherwise the given parameters gets stored
       # @param [Symbol, String] field a new multivalue_field
       # @return [Symbol] the multivalue_field
@@ -87,23 +98,16 @@ module DataMapper
           @ldap_multivalue_field = field.to_sym
         end
       end
-    end
-    
-    # authenticate the current resource against the stored password
-    # @param [String] password to authenticate
-    # @return [TrueClass, FalseClass] whether password was right or wrong
-    def authenticate(password)
-      ldap.authenticate(ldap.dn(self.class.dn_prefix(self),
-                                self.class.treebase), 
-                        password)
+
+      private
+      # short cut to the ldap facade
+      # @return [Ldap::LdapFacade]
+      def ldap
+        raise "not an ldap adapter #{repository.adapter.name}" unless repository.adapter.respond_to? :ldap
+        repository.adapter.ldap
+      end
     end
 
-    private
-    # short cut to the ldap facade
-    # @return [Ldap::LdapFacade]
-    def ldap
-      raise "not an ldap adapter #{repository.adapter.name}" unless repository.adapter.respond_to? :ldap
-      repository.adapter.ldap
-    end
+    include LdapResource
   end
 end

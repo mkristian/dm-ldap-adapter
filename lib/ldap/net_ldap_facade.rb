@@ -2,14 +2,14 @@ require 'net/ldap'
 
 module Ldap
   class NetLdapFacade
-    
+
     # @param config Hash for the ldap connection
     def self.open(config)
       Net::LDAP.open( config ) do |ldap|
         yield ldap
       end
     end
-    
+
     include ::Slf4r::Logger
 
     # @param config Hash for the ldap connection
@@ -25,8 +25,8 @@ module Ldap
       base = "#{treebase},#{@ldap.base}"
       id_sym = key_field.downcase.to_sym
       max = 0
-      @ldap.search( :base => base, 
-                    :attributes => [key_field], 
+      @ldap.search( :base => base,
+                    :attributes => [key_field],
                     :return_result => false ) do |entry|
         n = entry[id_sym].first.to_i
         max = n if max < n
@@ -41,12 +41,12 @@ module Ldap
     # @return nil in case of an error or the new id of the created object
     def create_object(dn_prefix, treebase, key_field, props, silence = false)
       base = "#{treebase},#{@ldap.base}"
-      if @ldap.add( :dn => dn(dn_prefix, treebase), 
+      if @ldap.add( :dn => dn(dn_prefix, treebase),
                     :attributes => props) and @ldap.get_operation_result.code.to_s == "0"
         props[key_field.downcase.to_sym]
       else
         unless silence
-          msg = ldap_error("create", 
+          msg = ldap_error("create",
                              dn(dn_prefix, treebase)) + "\n\t#{props.inspect}"
           # TODO maybe raise always an error
           if @ldap.get_operation_result.code.to_s == "68"
@@ -92,7 +92,7 @@ module Ldap
         when :eql
           if c.nil?
             f = ~ Net::LDAP::Filter.pres( cond[1].to_s )
-          elsif c.class == Array
+          elsif c.respond_to? :each
             f = nil
             c.each do |cc|
               if f
@@ -114,7 +114,7 @@ module Ldap
         when :not
             if c.nil?
               f = Net::LDAP::Filter.pres( cond[1].to_s )
-            elsif c.class == Array
+            elsif c.respond_to? :each
               f = nil
               c.each do |cc|
               if f
@@ -134,7 +134,7 @@ module Ldap
         end
         filters << f if f
       end
-      
+
       filter = nil
       filters.each do |f|
         if filter.nil?
@@ -148,7 +148,7 @@ module Ldap
       @ldap.search( :base => "#{treebase},#{@ldap.base}",
                     :attributes => field_names,
                     :filter => filter ) do |res|
-        map = to_map(res) 
+        map = to_map(res)
         #puts map[key_field.to_sym]
         # TODO maybe make filter which removes this unless
         # TODO move this into the ldap_Adapter to make it more general, so that
@@ -170,11 +170,11 @@ module Ldap
     # @param actions the add/replace/delete actions on the attributes
     # @return nil in case of an error or true
     def update_object(dn_prefix, treebase, actions)
-      if @ldap.modify( :dn => dn(dn_prefix, treebase), 
+      if @ldap.modify( :dn => dn(dn_prefix, treebase),
                        :operations => actions )
         true
       else
-        logger.warn(ldap_error("update", 
+        logger.warn(ldap_error("update",
                                dn(dn_prefix, treebase) + "\n\t#{actions.inspect}"))
         nil
       end
@@ -187,24 +187,24 @@ module Ldap
       if @ldap.delete( :dn => dn(dn_prefix, treebase) )
         true
       else
-        logger.warn(ldap_error("delete", 
+        logger.warn(ldap_error("delete",
                                dn(dn_prefix, treebase)))
-        
+
         nil
       end
     end
 
-    
+
     # @param dn String for identifying the ldap object
     # @param password String to be used for authenticate to the dn
     def authenticate(dn, password)
-      Net::LDAP.new( { :host => @ldap.host, 
-                       :port => @ldap.port, 
-                       :auth => { 
-                         :method => :simple, 
-                         :username => dn, 
-                         :password => password 
-                       }, 
+      Net::LDAP.new( { :host => @ldap.host,
+                       :port => @ldap.port,
+                       :auth => {
+                         :method => :simple,
+                         :username => dn,
+                         :password => password
+                       },
                        :base => @ldap.base
                      } ).bind
     end
@@ -218,7 +218,7 @@ module Ldap
     end
 
     private
-    
+
     # helper to extract the Hash from the ldap search result
     # @param Entry from the ldap_search
     # @return Hash with name/value pairs of the entry
@@ -228,7 +228,7 @@ module Ldap
       end
       entry.map
     end
-    
+
     def ldap_error(method, dn)
       "#{method} error: (#{@ldap.get_operation_result.code}) #{@ldap.get_operation_result.message}\n\tDN: #{dn}"
     end

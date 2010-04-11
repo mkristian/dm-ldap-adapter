@@ -4,9 +4,9 @@ require 'ldap/digest'
 # dummy implementation which turns the extra ldap configuration noops
 module DataMapper
   module Resource
- 
+
     module ClassMethods
- 
+
       include ::Slf4r::Logger
 
       def ldap_properties(resource = nil, &block)
@@ -21,7 +21,7 @@ module DataMapper
           logger.debug { "ldap_properties=#{@ldap_properties.inspect}" }
         end
       end
-      
+
       def treebase(resource = nil, &block)
         if block
           @treebase = block
@@ -34,7 +34,7 @@ module DataMapper
           logger.debug { "treebase=#{@treebase}" }
         end
       end
-      
+
       def dn_prefix(resource = nil, &block)
         if block
           @dn_prefix = block
@@ -47,12 +47,12 @@ module DataMapper
           logger.debug { "dn_prefix=#{dn_prefix}" }
         end
       end
-      
+
       def multivalue_field(field = nil)
         logger.debug { "multivalue_field = #{field}" } if field
       end
     end
-    
+
     def authenticate(password)
       raise "NotImplemented"
     end

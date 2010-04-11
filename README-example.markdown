@@ -15,4 +15,3 @@ first you need to adjust the configuration for ldap adapter in `example/posix.rb
      g.users
      u.authenticate("wrong-pwd")
      u.authenticate("pwd")
-

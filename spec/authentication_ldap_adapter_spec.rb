@@ -7,15 +7,10 @@ describe DataMapper.repository(:ldap).adapter do
 
     before do
       DataMapper.repository(:ldap) do
+        User.all.destroy!
         @user = User.new(:login => "beige", :name => 'Beige')
         @user.password = "asd123"
         @user.save
-      end
-    end
-
-    after do
-      DataMapper.repository(:ldap) do
-        @user.destroy
       end
     end
 

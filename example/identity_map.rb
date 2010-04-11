@@ -3,11 +3,11 @@ require 'example/posix.rb'
 USER_REPO = :default
 
 class User
-  
+
   def self.ddefault_repository_name
     USER_REPO
   end
-  
+
   def self.repository_name
     USER_REPO
   end
@@ -19,11 +19,11 @@ class User
 end
 
 class GroupUser
-  
+
   def self.ddefault_repository_name
     USER_REPO
   end
-  
+
   def self.repository_name
     USER_REPO
   end
@@ -31,11 +31,11 @@ class GroupUser
 end
 
 class Group
-  
+
   def self.ddefault_repository_name
     USER_REPO
   end
-  
+
   def self.repository_name
     USER_REPO
   end
@@ -60,13 +60,13 @@ DataMapper.repository(USER_REPO) do |repository|
       root.groups << admin
 
       p DataMapper.repository(USER_REPO).identity_map(User)
-      
+
       p DataMapper.repository(USER_REPO).identity_map(Group)
-      
+
       p root.authenticate('none')
-      
+
       p root.groups
-      
+
       (1..10).each {Item.create}
 
       p DataMapper.repository(DATA_REPO).identity_map(Item)

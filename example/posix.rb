@@ -31,7 +31,7 @@ unless dummy
                      :port => '389',
                      :base => ENV['LDAP_BASE'] || "dc=example,dc=com",
                      :bind_name => "cn=admin," + (ENV['LDAP_BASE'] || "dc=example,dc=com"),
-                     :password => ENV['LDAP_PWD'] || "behappy"   
+                     :password => ENV['LDAP_PWD'] || "behappy"
                    })
 else
   require 'dummy_ldap_resource'
@@ -101,11 +101,11 @@ class Group
   include Slf4r::Logger
   property :id,       Serial, :field => "gidnumber"
   property :name,     String, :field => "cn"
-  
+
   dn_prefix { |group| "cn=#{group.name}" }
-  
+
   treebase "ou=groups"
-  
+
   ldap_properties {{ :objectclass => "posixGroup"}}
 
   def users
@@ -131,17 +131,17 @@ class Group
     users
   end
 end
- 
+
 class GroupUser
   include DataMapper::Resource
   include Slf4r::Logger
- 
+
   dn_prefix { |group_user| "cn=#{group_user.group.name}" }
-  
+
   treebase "ou=groups"
-  
+
   multivalue_field :memberuid
-  
+
   ldap_properties do |group_user|
     {:cn=>"#{group_user.group.name}",  :objectclass => "posixGroup"}
   end

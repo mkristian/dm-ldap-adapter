@@ -3,8 +3,8 @@ require 'rubygems'
 require 'slf4r/ruby_logger'
 Slf4r::LoggerFacade4RubyLogger.level = :info
 
-gem 'dm-core', "<0.10.0"
-gem 'do_sqlite3', "<0.10.0"
+#gem 'dm-core', "~>0.10.2"
+#gem 'do_sqlite3'
 
 require 'do_sqlite3'
 require 'pathname'
@@ -12,9 +12,8 @@ $LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
 
 require 'ldap_resource'
 require 'adapters/ldap_adapter'
-require 'adapters/memory_adapter'
 
-DataMapper.setup(:default, 'sqlite3::memory:')
+DataMapper.setup(:default, 'sqlite3::memory')
 DataMapper.setup(:ldap, {
                    :adapter  => 'ldap',
                    :host => 'localhost',
@@ -22,15 +21,15 @@ DataMapper.setup(:ldap, {
                    :base => "dc=example,dc=com",
 #                   :facade => :ruby_ldap,
                    :bind_name => "cn=admin,dc=example,dc=com",
-                   :password => "behappy"   
+                   :password => "behappy"
 })
-DataMapper.setup(:memory, {:adapter  => 'memory'})
+#DataMapper.setup(:memory, {:adapter  => 'memory'})
 
 class User
   include DataMapper::Resource
   property :id,        Serial, :field => "uidnumber"
   property :login,     String, :field => "uid", :unique_index => true
-  property :hashed_password,  String, :field => "userpassword", :access => :private
+  property :hashed_password,  String, :field => "userpassword", :writer => :private
   property :name,      String, :field => "cn"
   property :mail,      String
   property :age,       Integer, :field => "postalcode"
@@ -62,7 +61,7 @@ class User
     end
     groups
   end
- 
+
   dn_prefix { |user| "uid=#{user.login}"}
 
   treebase "ou=people"
@@ -84,11 +83,11 @@ class Role
   include DataMapper::Resource
   property :id,       Serial, :field => "gidnumber"
   property :name,     String, :field => "cn"
-  
+
   dn_prefix { |role| "cn=#{role.name}" }
-  
+
   treebase "ou=groups"
-  
+
   ldap_properties {{:objectclass => "posixGroup"}}
 
   belongs_to :user
@@ -98,23 +97,23 @@ class Group
   include DataMapper::Resource
   property :id,       Serial, :field => "gidnumber"
   property :name,     String, :field => "cn"
-  
+
   dn_prefix { |group| "cn=#{group.name}" }
-  
+
   treebase "ou=groups"
-  
+
   ldap_properties {{:objectclass => "posixGroup"}}
 end
 
 class GroupUser
   include DataMapper::Resource
- 
+
   dn_prefix { |group_user| "cn=#{group_user.group.name}" }
-  
+
   treebase "ou=groups"
-  
+
   multivalue_field :memberuid
-  
+
   ldap_properties do |group_user|
     {:cn=>"#{group_user.group.name}",  :objectclass => "posixGroup"}
   end

@@ -14,11 +14,11 @@ module Ldap
       @host = config[:host]
       set_option(LDAP::LDAP_OPT_PROTOCOL_VERSION, 3)
     end
-    
+
   end
 
   class RubyLdapFacade
-    
+
     # @param config Hash for the ldap connection
     def self.open(config)
       ldap2 = Connection.new(config)
@@ -26,7 +26,7 @@ module Ldap
         yield ldap
       end
     end
-    
+
     include ::Slf4r::Logger
 
     # @param config Hash for the ldap connection
@@ -41,9 +41,9 @@ module Ldap
 
     def retrieve_next_id(treebase, key_field)
       max = 0
-      @ldap2.search("#{treebase},#{@ldap2.base}", 
-                    LDAP::LDAP_SCOPE_SUBTREE, 
-                    "(objectclass=*)", 
+      @ldap2.search("#{treebase},#{@ldap2.base}",
+                    LDAP::LDAP_SCOPE_SUBTREE,
+                    "(objectclass=*)",
                      [key_field]) do |entry|
         n = (entry.vals(key_field) || [0]).first.to_i
         max = n if max < n
@@ -66,7 +66,7 @@ module Ldap
         props[key_field.downcase.to_sym]
       else
         unless silence
-          msg = ldap_error("create", 
+          msg = ldap_error("create",
                              dn(dn_prefix, treebase)) + "\n\t#{props.inspect}"
           # TODO maybe raise always an error
           if @ldap2.get_operation_result.code.to_s == "68"
@@ -166,12 +166,12 @@ module Ldap
       logger.debug { "search filter: (#{filter.to_s})" }
       result = []
       begin
-      @ldap2.search("#{treebase},#{@ldap2.base}", 
-                    LDAP::LDAP_SCOPE_SUBTREE, 
-                    filter.to_s == "" ? "(objectclass=*)" : filter.to_s.gsub(/\(\(/, "(").gsub(/\)\)/, ")"), 
+      @ldap2.search("#{treebase},#{@ldap2.base}",
+                    LDAP::LDAP_SCOPE_SUBTREE,
+                    filter.to_s == "" ? "(objectclass=*)" : filter.to_s.gsub(/\(\(/, "(").gsub(/\)\)/, ")"),
                     field_names, false, 0, 0, order_field) do |res|
 
-        map = to_map(res) 
+        map = to_map(res)
         #puts map[key_field.to_sym]
         # TODO maybe make filter which removes this unless
         # TODO move this into the ldap_Adapter to make it more general, so that
@@ -207,11 +207,11 @@ module Ldap
               end
         LDAP.mod(mod_op, act[1].to_s, act[2] == [] ? [] : [act[2].to_s])
       end
-      if @ldap2.modify( dn(dn_prefix, treebase), 
+      if @ldap2.modify( dn(dn_prefix, treebase),
                        mods )
         true
       else
-        logger.warn(ldap_error("update", 
+        logger.warn(ldap_error("update",
                                dn(dn_prefix, treebase) + "\n\t#{actions.inspect}"))
         nil
       end
@@ -224,24 +224,24 @@ module Ldap
       if @ldap2.delete( dn(dn_prefix, treebase) )
         true
       else
-        logger.warn(ldap_error("delete", 
+        logger.warn(ldap_error("delete",
                                dn(dn_prefix, treebase)))
-        
+
         nil
       end
     end
 
-    
+
     # @param dn String for identifying the ldap object
     # @param password String to be used for authenticate to the dn
     def authenticate(dn, password)
-      Net::LDAP.new( { :host => @ldap2.host, 
-                       :port => @ldap2.port, 
-                       :auth => { 
-                         :method => :simple, 
-                         :username => dn, 
-                         :password => password 
-                       }, 
+      Net::LDAP.new( { :host => @ldap2.host,
+                       :port => @ldap2.port,
+                       :auth => {
+                         :method => :simple,
+                         :username => dn,
+                         :password => password
+                       },
                        :base => @ldap2.base
                      } ).bind
     end
@@ -255,7 +255,7 @@ module Ldap
     end
 
     private
-    
+
     # helper to extract the Hash from the ldap search result
     # @param Entry from the ldap_search
     # @return Hash with name/value pairs of the entry
@@ -266,7 +266,7 @@ module Ldap
       end
       map
     end
-    
+
     def ldap_error(method, dn)
       "#{method} error: (#{@ldap2.get_operation_result.code}) #{@ldap2.get_operation_result.message}\n\tDN: #{dn}"
     end

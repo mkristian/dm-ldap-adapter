@@ -1,19 +1,21 @@
-require 'adapters/simple_adapter'
+require "dm-core"
+require 'slf4r'
+require 'adapters/noop_transaction'
 
 module Ldap
 
   # the class provides two ways of getting a LdapFacade. either
   # one which is put on the current Thread or a new one
   class LdapConnection
-    
+
     include ::Slf4r::Logger
 
-    def initialize(uri)
-      if uri[:facade].nil?
+    def initialize(options)
+      if options[:facade].nil?
         require 'ldap/net_ldap_facade'
         @facade = ::Ldap::NetLdapFacade
       else
-        case uri[:facade].to_sym
+        case options[:facade].to_sym
         when :ruby_ldap
           require 'ldap/ruby_ldap_facade'
           @facade = ::Ldap::RubyLdapFacade
@@ -26,19 +28,19 @@ module Ldap
       end
       logger.info("using #{@facade}")
       @ldaps = { }
-      auth =  { 
+      auth =  {
         :method => :simple,
-        :username => uri[:bind_name],
-        :password => uri[:password]
-      } 
-      @config = { 
-        :host => uri[:host], 
-        :port => uri[:port].to_i, 
-        :auth => auth, 
-        :base => uri[:base]
+        :username => options[:bind_name],
+        :password => options[:password]
+      }
+      @config = {
+        :host => options[:host],
+        :port => options[:port].to_i,
+        :auth => auth,
+        :base => options[:base]
       }
     end
-    
+
     # puts a LdapFacade into the current thread and executes the
     # given block.
     def open
@@ -48,10 +50,10 @@ module Ldap
           yield
         end
       ensure
-        @ldaps[Thread.current] = nil 
+        @ldaps[Thread.current] = nil
       end
     end
-    
+
     # @return [Ldap::LdapFacade]
     #  either the one from the current Thread or a new one
     def current
@@ -67,10 +69,32 @@ end
 
 require "dm-core"
 module DataMapper
-  module Adapters
-    class LdapAdapter < SimpleAdapter
+  class Query
 
-      # @return [Ldap::LdapFacade] 
+    class SortCaseInsensitive < Sort
+      def initialize(value, ascending = true)
+        if(value && value.is_a?(String))
+          super(value.upcase, ascending)
+        else
+          super
+        end
+      end
+    end
+
+    def sort_records_case_insensitive(records)
+      sort_order = order.map { |direction| [ direction.target, direction.operator == :asc ] }
+
+      records.sort_by do |record|
+        sort_order.map do |(property, ascending)|
+          SortCaseInsensitive.new(record_value(record, property), ascending)
+        end
+      end
+    end
+  end
+  module Adapters
+    class LdapAdapter < AbstractAdapter
+
+      # @return [Ldap::LdapFacade]
       #   ready to use LdapFacade
       def ldap
         @ldap_connection.current
@@ -81,25 +105,25 @@ module DataMapper
       end
 
       def key_properties(resource)
-        resource.send(:key_properties).first
+        resource.model.key.first
       end
 
       COMPARATORS = { "=" => :eql, ">=" => :gte, "<=" => :lte, "like" => :like }
 
       # helper to remove datamapper specific classes from the conditions
-      # @param [Array] conditions 
+      # @param [Array] conditions
       #   array of tuples: (action, property, new value)
-      # @return [Array] 
+      # @return [Array]
       #   tuples: (action, attribute name, new value)
       def to_ldap_conditions(query)
         conditions = query.conditions
         ldap_conditions = []
-        conditions.each do |c|
-          if c[0] == :raw
+        conditions.operands.each do |c|
+          if c.is_a? Array
             props = {}
             query.fields.each{ |f| props[f.name] = f.field}
             or_conditions = []
-            c[1].split('or').each do |e|
+            c[0].split('or').each do |e|
               e.strip!
               match = e.match("=|<=|>=|like")
               or_conditions << [COMPARATORS[match.values_at(0)[0]],
@@ -108,23 +132,57 @@ module DataMapper
             end
             ldap_conditions << [:or_operator, or_conditions, nil]
           else
-            ldap_conditions << [c[0], c[1].field, c[2]]
+          comparator = c.slug
+          case comparator
+          when :raw
+          when :not
+              # TODO proper recursion !!!
+            ldap_conditions << [comparator, c.operands.first.subject.field, c.operands.first.send(:dumped_value)]
+          when :in
+            ldap_conditions << [:eql, c.subject.field, c.send(:dumped_value)]
+          else
+            ldap_conditions << [comparator, c.subject.field, c.send(:dumped_value)]
           end
+        end
         end
         ldap_conditions
       end
 
-      public
+      include ::Slf4r::Logger
 
-      def initialize(name, uri_or_options)
-        super(name, uri_or_options)
-        @ldap_connection = ::Ldap::LdapConnection.new(@uri)
+      # @see AbstractAdapter
+      def transaction_primitive
+        NoopTransaction.new
       end
 
+      public
+
+      def initialize(name, options)
+        super(name, options)
+        @ldap_connection = ::Ldap::LdapConnection.new(@options)
+      end
+
+
+      def create(resources)
+        resources.select do |resource|
+
+          create_resource(resource)
+
+        end.size # just return the number of create resources
+      end
+
+      def update(attributes, collection)
+        collection.each do |resource|
+#puts "update"
+#p resource
+          update_resource(resource, attributes)
+
+        end.size
+      end
       # @param [DataMapper::Resource] resource
       #   to be created
       # @see SimpleAdapter#create_resource
-      # @return [Fixnum] 
+      # @return [Fixnum]
       #    value for the primary key or nil
       def create_resource(resource)
         logger.debug { resource.inspect }
@@ -134,7 +192,7 @@ module DataMapper
         resource.send(:properties).each do |prop|
           value = prop.get!(resource)
           if prop.type == ::DataMapper::Types::LdapArray
-            props[prop.field.to_sym] = value.to_s unless value.nil? or value.size == 0
+            props[prop.field.to_sym] = value unless value.nil? or value.size == 0
           else
             props[prop.field.to_sym] = value.to_s unless value.nil?
           end
@@ -156,14 +214,14 @@ module DataMapper
                     end
         logger.debug { "resource #{resource.inspect} key value: #{key_value.inspect}" + ", multivalue_field: " + resource.model.multivalue_field.to_s }
         if key_value and !key.nil?
-          key.set!(resource, key_value.to_i) 
+          key.set!(resource, key_value.to_i)
           resource
         elsif resource.model.multivalue_field
           multivalue_prop = resource.send(:properties).detect do |prop|
             prop.field.to_sym == resource.model.multivalue_field
           end
-          update_resource(resource, 
-                          { multivalue_prop => 
+          update_resource(resource,
+                          { multivalue_prop =>
                             resource.send(multivalue_prop.name.to_sym)})
         else
           nil
@@ -180,17 +238,19 @@ module DataMapper
         attributes.each do |property, value|
           field = property.field.to_sym #TODO sym needed or string ???
           if property.type == ::DataMapper::Types::LdapArray
-            if resource.original_values[property.name].nil?
-              actions << [:add, field, value.to_s]
+            if resource.original_attributes[property].nil?
+              value.each do |v|
+                actions << [:add, field, v]
+              end
             else
               array_actions = []
-              resource.original_values[property.name].each do |ov|
+              resource.original_attributes[property].each do |ov|
                 unless value.member? ov
                   actions << [:delete, field, ov.to_s]
                 end
               end
               value.each do |v|
-                unless resource.original_values[property.name].member? v
+                unless resource.original_attributes[property].member? v
                   actions << [:add, field, v.to_s]
                 end
               end
@@ -199,119 +259,93 @@ module DataMapper
           else
             if resource.model.multivalue_field == property.field.to_sym
               if value.nil?
-                actions << [:delete, field, resource.original_values[property.name].to_s]
+                actions << [:delete, field, resource.original_attributes[property].to_s]
               else
                 actions << [:add, field, value.to_s]
               end
             elsif value.nil?
               actions << [:delete, field, []]
-            elsif resource.original_values[property.name].nil?
+            elsif resource.original_attributes[property].nil?
               actions << [:add, field, value.to_s]
             else
               actions << [:replace, field, value.to_s]
             end
           end
         end
-# puts "actions"
-# p actions
+#puts "actions"
+#p actions
 #puts
-        ldap.update_object(resource.model.dn_prefix(resource), 
-                           resource.model.treebase, 
+        ldap.update_object(resource.model.dn_prefix(resource),
+                           resource.model.treebase,
                            actions)
       end
 
-      # @param [DataMapper::Resource] resource
-      #   to be deleted
-      # @see SimpleAdapter#delete_resource
-      def delete_resource(resource)
-        if resource.model.multivalue_field
-          multivalue_prop = resource.send(:properties).detect do |prop|
-            prop.field.to_sym == resource.model.multivalue_field
-          end
-          # set the original value so update does the right thing
-          resource.send("#{multivalue_prop.name}=".to_sym, nil)
-          update_resource(resource, 
-                          { multivalue_prop => nil })
-        else
-          ldap.delete_object(resource.model.dn_prefix(resource),
-                             resource.model.treebase)
-        end
-      end
-      
-      # @param [DataMapper::Query] query
-      #   the search criteria
-      # @return [DataMapper::Resource]
-      #   the found resource or nil
-      # @see SimpleAdapter#read_resource
-      def read_resource(query)  
-        field_names = query.fields.collect {|f| f.field }
-        result = ldap.read_objects(query.model.treebase, 
-                                   query.model.key.collect { |k| k.field}, 
-                                   to_ldap_conditions(query),
-                                   field_names)
-        if query.model.multivalue_field
-          resource = result.detect do |item|
-            # run over all values of the multivalue field
-            item[query.model.multivalue_field].any? do |value|
-              values =  query.fields.collect do |f|
-                if query.model.multivalue_field == f.field.to_sym 
-                  value
-                else 
-                  val = item[f.field.to_sym].first
-                  f.primitive == Integer ? val.to_i : val
-                end
-              end
-              resource = query.model.load(values, query)
-              return resource if filter_resource(resource, query.conditions)
+      # @see AbstractAdapter#delete
+      def delete(collection)
+        collection.each do |resource|
+          if resource.model.multivalue_field
+            multivalue_prop = resource.send(:properties).detect do |prop|
+              prop.field.to_sym == resource.model.multivalue_field
             end
-          end
-        else
-          values = result.first
-          if values
-            query.fields.collect do |f|
-              val = values[f.field.to_sym]
-              if f.type == DataMapper::Types::LdapArray
-                val if val
-              elsif val
-                f.primitive == Integer ? val.first.to_i : val.first
-              end
-            end
+            # set the original value so update does the right thing
+            resource.send("#{multivalue_prop.name}=".to_sym, nil)
+            update_resource(resource,
+                            { multivalue_prop => nil })
+          else
+            ldap.delete_object(resource.model.dn_prefix(resource),
+                               resource.model.treebase)
           end
         end
       end
-        
-      # @param [DataMapper::Query] query
-      #   the search criteria
-      # @return [Array<DataMapper::Resource]
-      #   the array of found resources
-      # @see SimpleAdapter#read_resources
+
+      # @see AbstractAdapter#read
+      def read(query)
+        result = []
+        resources = read_resources(query)
+        resources.each do |resource|
+          map = {}
+          query.fields.each_with_index do |property, idx|
+            map[property.field] = property.typecast(resource[idx])
+          end
+          result << map
+        end
+
+#puts "read_many"
+#p result
+        result = result.uniq if query.unique?
+        result = query.match_records(result) if query.model.multivalue_field
+        result = query.sort_records_case_insensitive(result)
+        result = query.limit_records(result)
+        result
+      end
+
       def read_resources(query)
-        order_by = query.order.first.property.field
+        order_by = query.order.first.target.field
         order_by_sym = order_by.to_sym
         field_names = query.fields.collect {|f| f.field }
-        result = ldap.read_objects(query.model.treebase, 
-                                   query.model.key.collect { |k| k.field }, 
+        result = ldap.read_objects(query.model.treebase,
+                                   query.model.key.collect { |k| k.field },
                                    to_ldap_conditions(query),
-                                   field_names, order_by).sort! do |u1, u2|
-          value1 = u1[order_by_sym].first.upcase rescue ""
-          value2 = u2[order_by_sym].first.upcase rescue ""
-          value1 <=> value2
-        end
+                                   field_names, order_by)
+#.sort! do |u1, u2|
+#          value1 = u1[order_by_sym].first.upcase rescue ""
+#          value2 = u2[order_by_sym].first.upcase rescue ""
+#          value1 <=> value2
+#        end
         if query.model.multivalue_field
           props_result = []
           result.each do |props|
             # run over all values of the multivalue field
             (props[query.model.multivalue_field] || []).each do |value|
               values =  query.fields.collect do |f|
-                if query.model.multivalue_field == f.field.to_sym 
+                if query.model.multivalue_field == f.field.to_sym
                   value
-                else 
+                else
                   prop = props[f.field.to_sym].first
                   f.primitive == Integer ? prop.to_i : prop
                 end
               end
-              resource = query.model.load(values, query)
-              props_result << resource if filter_resource(resource, query.conditions)
+              props_result << values
             end
           end
           props_result
@@ -328,6 +362,8 @@ module DataMapper
           end
         end
       end
+
+      include ::DataMapper::Transaction::Adapter
     end
   end
 end

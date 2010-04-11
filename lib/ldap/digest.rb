@@ -6,9 +6,9 @@ module Ldap
     # @param salt String the salt for the password digester
     # @return the encoded password/salt
     def self.ssha(secret, salt)
-      require 'sha1' 
-      require 'base64' 
-      (salt.empty? ? "{SHA}": "{SSHA}") +  
+      require 'sha1'
+      require 'base64'
+      (salt.empty? ? "{SHA}": "{SSHA}") +
         Base64.encode64(::Digest::SHA1.digest(secret + salt) + salt).gsub(/\n/, '')
     end
 

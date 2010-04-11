@@ -12,3 +12,6 @@ ldapsearch -x -w behappy -c -D "cn=admin,dc=example,dc=com" -b 'ou=groups,dc=exa
 
 # printout delete commands for all people
 ldapsearch -x -w behappy -c -D "cn=admin,dc=example,dc=com" -b 'ou=people,dc=example,dc=com' "uid=*" | grep ^uid: | sed -e "s/^.....//" -e 's/$/,ou=people,dc=example,dc=com"/' -e 's/^/-x -w behappy -c -D "cn=admin,dc=example,dc=com" "uid=/' | xargs -L 1 echo ldapdelete
+
+# all groups
+ldapsearch -x -w behappy -c -D "cn=admin,dc=example,dc=com" -b 'ou=groups,dc=example,dc=com' "cn=*" | grep ^cn: | sed -e "s/^....//" -e 's/$/,ou=groups,dc=example,dc=com"/' -e 's/^/-x -w behappy -c -D "cn=admin,dc=example,dc=com" "cn=/' | xargs -L 1 echo ldapdelete

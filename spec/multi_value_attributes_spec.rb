@@ -6,7 +6,7 @@ class Contact
 
   property :id,        Serial, :field => "uidnumber"
   property :login,     String, :field => "uid", :unique_index => true
-  property :hashed_password,  String, :field => "userpassword", :access => :private, :lazy => true
+  property :hashed_password,  String, :field => "userpassword", :writer => :private, :lazy => true
   property :name,      String, :field => "cn"
   property :mail,      LdapArray
 
@@ -33,42 +33,53 @@ describe DataMapper.repository(:ldap).adapter.class do
 
     before :each do
       DataMapper.repository(:ldap) do
-        Contact.all(:login => "beige").destroy!
-        @contact =  Contact.new(:login => "beige", :name => 'Beige')
-        @contact.password = "asd123"
-        @contact.save
-      end
-    end
-
-    after :each do
-      DataMapper.repository(:ldap) do
-        @contact.destroy
+        begin
+          Contact.all(:login.like => "b%").destroy!
+          @contact =  Contact.new(:login => "beige", :name => 'Beige')
+          @contact.password = "asd123"
+          @contact.save
+        rescue => e
+          puts e.backtrace.join("\n\t")
+          raise e
+        end
       end
     end
 
     it 'should add many values to a LdapArray' do
        DataMapper.repository(:ldap) do
         @contact.mail.should == []
+        @contact.mails.should == []
 
-        @contact.mail << "email1"
+        @contact.mails << "email1"
         @contact.save
+      end
+      DataMapper.repository(:ldap) do
         @contact = Contact.get!(@contact.id)
         @contact.mail.should == ["email1"]
-
-        @contact.mail << "email2"
+        @contact.mails.should == ["email1"]
+        @contact.mails << "email2"
         @contact.save
+      end
+      DataMapper.repository(:ldap) do
         @contact = Contact.get!(@contact.id)
         @contact.mail.should == ["email1", "email2"]
+        @contact.mails.should == ["email1", "email2"]
 
-        @contact.mail.delete("email1")
+        @contact.mails.delete("email1")
         @contact.save
+      end
+      DataMapper.repository(:ldap) do
         @contact = Contact.get!(@contact.id)
         @contact.mail.should == ["email2"]
+        @contact.mails.should == ["email2"]
 
-        @contact.mail.delete("email2")
+        @contact.mails.delete("email2")
         @contact.save
+      end
+      DataMapper.repository(:ldap) do
         @contact = Contact.get!(@contact.id)
         @contact.mail.should == []
+        @contact.mails.should == []
       end
     end
 
@@ -76,23 +87,31 @@ describe DataMapper.repository(:ldap).adapter.class do
       DataMapper.repository(:ldap) do
         @contact.mail.should == []
 
-        @contact.mail << "email1"
+        @contact.mail = "email1"
         @contact.save
+      end
+      DataMapper.repository(:ldap) do
         @contact = Contact.all.detect {|c| c.id = @contact.id}
         @contact.mail.should == ["email1"]
 
-        @contact.mail << "email2"
+        @contact.mails << "email2"
         @contact.save
+      end
+      DataMapper.repository(:ldap) do
         @contact = Contact.all.detect {|c| c.id = @contact.id}
         @contact.mail.should == ["email1", "email2"]
 
-        @contact.mail.delete("email1")
+        @contact.mails.delete("email1")
         @contact.save
+      end
+      DataMapper.repository(:ldap) do
         @contact = Contact.all.detect {|c| c.id = @contact.id}
         @contact.mail.should == ["email2"]
 
-        @contact.mail.delete("email2")
+        @contact.mails.delete("email2")
         @contact.save
+      end
+      DataMapper.repository(:ldap) do
         @contact = Contact.all.detect {|c| c.id = @contact.id}
         @contact.mail.should == []
       end
@@ -104,6 +123,20 @@ describe DataMapper.repository(:ldap).adapter.class do
         @contact.mail.should == []
         @contact.mail = ['foo', 'bar']
         @contact.save
+      end
+      DataMapper.repository(:ldap) do
+        @contact = Contact.get(@contact.id)
+        @contact.mail.should == ['foo', 'bar']
+      end
+    end
+    it 'should create resource with the LdapArray' do
+      DataMapper.repository(:ldap) do
+        @contact = Contact.new(:login => "black", :name => 'Black')
+        @contact.password = "asd123"
+        @contact.mail = ['foo', 'bar']
+        @contact.save
+      end
+      DataMapper.repository(:ldap) do
         @contact = Contact.get(@contact.id)
         @contact.mail.should == ['foo', 'bar']
       end
