@@ -75,13 +75,9 @@ module Ldap
         # TODO maybe make filter which removes this unless
         # TODO move this into the ldap_Adapter to make it more general, so that
         # all field with Integer gets converted, etc
-        result << map if key_fields.select do |key_field|
-          if map.member? key_field.to_sym
-            # convert field to integer
-            map[key_field.to_sym] = [map[key_field.to_sym].collect { |k| k.to_i != 0 ? k.to_s : k }].flatten
-            true
-          end
-        end.size > 0 # i.e. there was at least one key_field in the map
+        result << map if key_fields.detect do |key_field|
+          map.member? key_field.to_sym
+        end
       end
       result
     end

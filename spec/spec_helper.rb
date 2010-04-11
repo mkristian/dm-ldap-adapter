@@ -13,7 +13,7 @@ $LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
 require 'ldap_resource'
 require 'adapters/ldap_adapter'
 
-DataMapper.setup(:default, 'sqlite3::memory')
+DataMapper.setup(:default, 'sqlite3::memory:')
 DataMapper.setup(:ldap, {
                    :adapter  => 'ldap',
                    :host => 'localhost',

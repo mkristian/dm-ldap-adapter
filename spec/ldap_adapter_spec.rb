@@ -47,6 +47,12 @@ describe DataMapper::Adapters::LdapAdapter do
     end
   end
 
+  it 'should be able to search with empty result' do
+    DataMapper.repository(:ldap) do
+      User.all(:name => "blablublo").should == []
+    end
+  end
+
   it 'should be able to search for objects with equal value' do
     DataMapper.repository(:ldap) do
       User.all(:name => "Brown").should == [@user2]
