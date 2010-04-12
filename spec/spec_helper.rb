@@ -3,9 +3,6 @@ require 'rubygems'
 require 'slf4r/ruby_logger'
 Slf4r::LoggerFacade4RubyLogger.level = :info
 
-#gem 'dm-core', "~>0.10.2"
-#gem 'do_sqlite3'
-
 require 'do_sqlite3'
 require 'pathname'
 $LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
@@ -23,7 +20,6 @@ DataMapper.setup(:ldap, {
                    :bind_name => "cn=admin,dc=example,dc=com",
                    :password => "behappy"
 })
-#DataMapper.setup(:memory, {:adapter  => 'memory'})
 
 class User
   include DataMapper::Resource
