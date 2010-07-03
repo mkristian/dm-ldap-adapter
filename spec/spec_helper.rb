@@ -3,9 +3,13 @@ require 'rubygems'
 require 'slf4r/ruby_logger'
 Slf4r::LoggerFacade4RubyLogger.level = :info
 
-require 'do_sqlite3'
+require 'dm-sqlite-adapter'
+require 'dm-migrations'
+#require 'dm-transactions'
 require 'pathname'
 $LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
+
+p DataMapper::VERSION
 
 require 'ldap_resource'
 require 'adapters/ldap_adapter'
@@ -21,6 +25,20 @@ DataMapper.setup(:ldap, {
                    :password => "behappy"
 })
 
+module DataMapper
+  module Resource
+    class State
+
+      # a persisted/deleted resource
+      class Deleted < Persisted
+        def set(subject, value)
+          warn 'Deleted resource cannot be modified ' + subject.inspect + ' ' + value.to_s + " " + @resource.inspect
+          super
+        end
+      end
+    end
+  end
+end
 class User
   include DataMapper::Resource
   property :id,        Serial, :field => "uidnumber"
@@ -49,12 +67,14 @@ class User
       self
     end
     def groups.delete(group)
+p "***********" + self.inspect
       gu = GroupUser.first(:user_id => @user.id, :group_id => group.id)
       if gu
         gu.destroy
         super
       end
     end
+p "++++++++++" + groups.inspect
     groups
   end
 

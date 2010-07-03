@@ -1,6 +1,6 @@
 require "dm-core"
 require 'slf4r'
-require 'adapters/noop_transaction'
+# require 'adapters/noop_transaction'
 
 module Ldap
 
@@ -151,9 +151,9 @@ module DataMapper
       include ::Slf4r::Logger
 
       # @see AbstractAdapter
-      def transaction_primitive
-        NoopTransaction.new
-      end
+#      def transaction_primitive
+ #       NoopTransaction.new
+  #    end
 
       public
 
@@ -191,7 +191,10 @@ module DataMapper
         key = nil
         resource.send(:properties).each do |prop|
           value = prop.get!(resource)
-          if prop.type == ::DataMapper::Types::LdapArray
+          if prop.class == ::DataMapper::Property::LdapArray
+puts "---------------------HERE" 
+p value
+puts
             props[prop.field.to_sym] = value unless value.nil? or value.size == 0
           else
             props[prop.field.to_sym] = value.to_s unless value.nil?
@@ -237,7 +240,12 @@ module DataMapper
         actions = []
         attributes.each do |property, value|
           field = property.field.to_sym #TODO sym needed or string ???
-          if property.type == ::DataMapper::Types::LdapArray
+          if property.class == ::DataMapper::Property::LdapArray
+puts "====================HERE" 
+p value
+value = property.load(value)
+p resource.original_attributes[property]
+puts
             if resource.original_attributes[property].nil?
               value.each do |v|
                 actions << [:add, field, v]
@@ -311,7 +319,7 @@ module DataMapper
         end
 
 #puts "read_many"
-#p result
+#p result.size
         result = result.uniq if query.unique?
         result = query.match_records(result) if query.model.multivalue_field
         result = query.sort_records_case_insensitive(result)
@@ -323,6 +331,8 @@ module DataMapper
         order_by = query.order.first.target.field
         order_by_sym = order_by.to_sym
         field_names = query.fields.collect {|f| f.field }
+puts "field names"
+p field_names 
         result = ldap.read_objects(query.model.treebase,
                                    query.model.key.collect { |k| k.field },
                                    to_ldap_conditions(query),
@@ -350,10 +360,15 @@ module DataMapper
           end
           props_result
         else # no multivalue field
+p result #if field_names.member? "mail"
           result.collect do |props|
             query.fields.collect do |f|
               prop = props[f.field.to_sym]
-              if f.type == DataMapper::Types::LdapArray
+              if f.class == DataMapper::Property::LdapArray
+puts "+++++++++++++++++++++++HERE" 
+p query.fields
+p prop
+puts
                 prop if prop
               elsif prop
                 f.primitive == Integer ? prop.first.to_i : prop.first
@@ -363,7 +378,7 @@ module DataMapper
         end
       end
 
-      include ::DataMapper::Transaction::Adapter
+#      include ::DataMapper::Transaction::Adapter
     end
   end
 end
