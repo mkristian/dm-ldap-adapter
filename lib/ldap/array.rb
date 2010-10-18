@@ -1,143 +1,95 @@
-#DataMapper::Property::PRIMITIVES.replace(DataMapper::Property::PRIMITIVES.dup + [Array])
+require 'dm-core'
 module Ldap
   class Array < ::Array
 
-    def initialize(resource, property)
+    def initialize(resource, property,  *args)
+      setup(resource, property)
+      super(args)
+    end
+
+    def setup(resource, property)
       @resource = resource
       @property = property
-      super(0)
+      self
     end
+
+    alias :push! :push
 
     def <<(element)
       push(element)
     end
 
-    alias :push_old :push
-
     def push(element)
-      array = self.dup
-      array.push_old(element)
-      @resource.attribute_set(@property.name, array)
-      array.freeze
+      result = super
+      @resource.send("#{@property.name}=".to_sym, self)
+      result
     end
 
-    alias :delete_old :delete
+   alias :delete! :delete
 
     def delete(element)
-      array = self.dup
-      array.delete_old(element)
-      @resource.attribute_set(@property.name, array)
-      array.freeze
+      result = super
+      @resource.send(:"#{@property.name}=", self)
+      result
     end
   end
-end
 
-module DataMapper
-  class Property
-    class LdapArray < Text 
-      
-#      default Proc.new { |r,p| Ldap::Array.new(r,p).freeze }
+  class LdapArray < ::DataMapper::Property::Text 
+    
+    default Proc.new { |r,p| Ldap::Array.new(r,p) }
 
-      def custom?
-        true
-      end
+    def custom?
+      true
+    end
 
-      def primitive?(value)
-        super || value.kind_of?(::Array)
-      end
+    def primitive?(value)
+      super || value.kind_of?(::Array)
+    end
 
-      def load(value)
-        result = 
-        case value
-          when ::String then value.gsub(/^.|.$/,'').split('","').to_a.freeze
-          when ::Array then value.freeze
+    def load(value)
+      result = case value
+               when ::String then value.gsub(/^.|.$/,'').split('","').to_a.freeze
+               when ::Array then value.freeze
+               else
+                 nil
+               end
+    end
+
+    def dump(value)
+      result = case value
+               when LdapArray then '"' + value.join('","') + '"'
+               when ::Array then '"' + value.join('","') + '"'
+               when ::String then '"' + value.to_s + '"'
+               else
+                 nil
+               end
+    end
+
+    def initialize(*args)
+      super
+      model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
+        def #{name.to_s}=(v)
+          case v
+          when Ldap::Array
+            v.setup(self, properties[:#{name}])
           else
-            nil
+            vv = Ldap::Array.new(self, properties[:#{name}])
+            vv.replace(v)
+          end
+          attribute_set(:#{name}, v)
         end
-puts "load"
-p value.class
-p value
-        p result
-puts
-        result
-      end
 
-      def dump(value)
-        result = 
-        case value
-          when ::Array then '"' + value.join('","') + '"'
-          when ::String then '"' + value.to_s + '"'
+        def #{name.to_s}
+          v = attribute_get(:#{name})
+          case v
+          when Ldap::Array
+            v.setup(self, properties[:#{name}])
           else
-            nil
+            vv = Ldap::Array.new(self, properties[:#{name}])
+            vv.replace(v)
+          end
         end
-puts "dump"
-p value
-p value.class
-        p result
-puts
-        result
-      end
-
-      # primitive String#Array
-      # default Proc.new { |r,p| Ldap::Array.new(r,p).freeze }
-
-      # def self.bind(property)
-      #   repository_name = property.repository_name
-      #   model           = property.model
-      #   property_name   = property.name
-
-      #   # model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
-      #   #   def #{property_name.to_s.plural}=(v)
-      #   #     attribute_set(:#{property_name}, v)
-      #   #   end
-
-      #   #   def #{property_name.to_s.plural}
-      #   #     v = attribute_get(:#{property_name})
-      #   #     case v
-      #   #     when Ldap::Array
-      #   #       v
-      #   #     else
-      #   #       vv = Ldap::Array.new(self, properties[:#{property_name}])
-      #   #       vv.replace(v)
-      #   #     end
-      #   #   end
-      #   # RUBY
-      # end
-
-      # def self.typecast(value, property)
-      #   puts "typecast"
-      #   p value
-      #   p property
-      #   value
-      # end
-
-      # def self.dump(value, property)
-      #   puts "dump"
-      #   p value
-      #   result = case value
-      #   when String then '"' + value.to_s + '"'
-      #   else
-      #     '"' + (value || []).join('","') + '"'
-      #   end
-      #   p result
-      #   result
-      # end
-
-      # def self.from_string(value)
-      #   case value
-      #   when Array then value
-      #   else
-      #     (value || '').gsub(/^.|.$/,'').split('","').to_a
-      #   end
-      # end
-
-      # def self.load(value, property)
-      #   puts "load"
-      #   p value
-      #   result =  value || from_string(value)
-      #   p result
-      #   result
-      # end
+      RUBY
     end
   end
 end
