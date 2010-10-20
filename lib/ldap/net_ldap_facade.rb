@@ -43,7 +43,7 @@ module Ldap
     def create_object(dn_prefix, treebase, key_field, props, silence = false)
       base = "#{treebase},#{@ldap.base}"
       if @ldap.add( :dn => dn(dn_prefix, treebase),
-                    :attributes => props) and @ldap.get_operation_result.code.to_s == "0"
+                    :attributes => props) || @ldap.get_operation_result.code.to_s == "0"
         props[key_field.downcase.to_sym]
       else
         unless silence
@@ -89,7 +89,7 @@ module Ldap
     # @return nil in case of an error or true
     def update_object(dn_prefix, treebase, actions)
       if @ldap.modify( :dn => dn(dn_prefix, treebase),
-                       :operations => actions )
+                       :operations => actions ) || @ldap.get_operation_result.code.to_s == "0"
         true
       else
         logger.warn(ldap_error("update",
