@@ -15,6 +15,12 @@ module Ldap
 
     alias :push! :push
 
+    def []=(k, v)
+      result = super
+      @resource.send("#{@property.name}=".to_sym, self)
+      result
+    end
+
     def <<(element)
       push(element)
     end
@@ -51,7 +57,7 @@ module Ldap
                when ::String then value.gsub(/^.|.$/,'').split('","').to_a.freeze
                when ::Array then value.freeze
                else
-                 nil
+                 []
                end
     end
 
