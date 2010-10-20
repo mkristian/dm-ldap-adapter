@@ -9,7 +9,7 @@ require 'spec/rake/spectask'
 require 'pathname'
 
 Hoe.spec('dm-ldap-adapter') do |p|
-  p.version = "0.4.0.alpha1"
+  p.version = "0.4.0.alpha3"
   p.description = "ldap adapter for datamapper which uses either net-ldap or ruby-ldap"
   p.developer('mkristian', 'm.kristian@web.de')
   p.url = "http://dm-ldap-adapter.rubyforge.org"
@@ -31,8 +31,8 @@ Spec::Rake::SpecTask.new(:spec) do |t|
   t.spec_files = Pathname.glob('./spec/**/*_spec.rb')
 end
 
-require 'yard'
+#require 'yard'
 
-YARD::Rake::YardocTask.new
+#YARD::Rake::YardocTask.new
 
 # vim: syntax=Ruby
