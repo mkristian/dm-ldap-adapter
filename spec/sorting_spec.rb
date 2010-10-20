@@ -8,8 +8,8 @@ describe DataMapper.repository(:ldap).adapter do
     before do
       DataMapper.repository(:ldap) do
         User.all.destroy!
-        @user1 = User.create(:login => "black", :name => 'Black', :mail => "blackmail@example.com", :age => 100)
-        @user2 = User.create(:login => "brown", :name => 'brown', :mail => "brownmail@example.com", :age => 25)
+        @user1 = User.create(:login => "black", :name => 'Black', :mail => ["blackmail@example.com"], :age => 100)
+        @user2 = User.create(:login => "brown", :name => 'brown', :mail => ["brownmail@example.com"], :age => 25)
         @user3 = User.create(:login => "blue", :name => 'Yellow')
         @user4 = User.create(:login => "baluh", :name => 'Hmm')
       end
@@ -49,11 +49,11 @@ describe DataMapper.repository(:ldap).adapter do
 
     it 'should sort with nil values' do
       DataMapper.repository(:ldap) do
-        users = User.all(:order => [:mail]).select { |u| !u.mail.nil? }
+        users = User.all(:order => [:name]).select { |u| !u.mail.nil? }
         users.should == [@user1, @user2]
       end
       DataMapper.repository(:ldap) do
-        users = User.all(:order => [:mail]).reverse.select { |u| !u.mail.nil? }
+        users = User.all(:order => [:name]).reverse.select { |u| !u.mail.nil? }
         users.should == [@user2, @user1]
       end
     end

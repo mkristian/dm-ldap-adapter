@@ -1,0 +1,67 @@
+$LOAD_PATH << File.dirname(__FILE__)
+require 'spec_helper'
+require 'contact'
+
+require 'dm-core/version'
+p DataMapper::VERSION
+describe DataMapper.repository(:ldap).adapter do
+
+  describe 'sorting of big list' do
+    
+    before do
+      DataMapper.repository(:ldap) do
+        #User.all.destroy!
+        first = 1501
+        len = 1500
+        (first..len).each do |i|
+          p i
+          Contact.create(:id => "login#{i}", :sn => "name#{Kernel.rand}")
+        end
+      end
+    end
+    
+    it 'should load all and sort in timely manner' do
+      expected = nil
+      all = nil
+
+      DataMapper.repository(:ldap) do
+        #puts User.all.collect {|u| u.name }.join("\n")
+        #p User.all.size
+        fields = Contact.properties.defaults.dup.<<(Contact.properties[:mobile])
+        start = Time.new
+        all  = Contact.all(:fields => fields)
+        intermediate = Time.new
+        all.each { |a| a.mobile }
+        finished = Time.new
+
+p intermediate - start
+p finished - intermediate
+p finished - start
+
+      end
+puts
+      DataMapper.repository(:ldap) do
+        #puts User.all.collect {|u| u.name }.join("\n")
+        #p User.all.size
+        fields = Contact.properties.defaults.dup.<<(Contact.properties[:mobile])
+        start = Time.new
+        all  = Contact.all(:order => [:sn], :fields => fields)
+        intermediate = Time.new
+        all.each { |a| a.inspect }
+        finished = Time.new
+        expected = all.dup.sort do |u1, u2|
+          u1.sn.upcase <=> u2.sn.upcase
+        end
+
+p intermediate - start
+p finished - intermediate
+p finished - start
+
+ #       all.should == expected
+      end
+#p all#.collect {|u| u.name }.join("\n")
+
+    end
+  end
+
+end

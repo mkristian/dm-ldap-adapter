@@ -13,7 +13,9 @@ class A
   property :list, ::Ldap::LdapArray
 end
 
-DataMapper.setup(:default, 'sqlite3::memory:')#test.sqlite3')
+require 'fileutils'
+FileUtils.mkdir_p("target")
+DataMapper.setup(:default, 'sqlite3:target/test.sqlite3')
 DataMapper.finalize
 DataMapper.auto_migrate!(:default)
 
@@ -41,13 +43,23 @@ describe Ldap::LdapArray do
     resource.list.class.should == Ldap::Array
   end
 
-  it 'should save changes' do
+  it 'should save after adding an element' do
     @resource.list = ["1", "2"]
     @resource.save
     @resource.list << "4"
     @resource.save
     resource = A.first(:id => @resource.id)
     resource.list.should == ["1", "2", "4"]
+    resource.list.class.should == Ldap::Array
+  end
+
+  it 'should save after changing an element' do
+    @resource.list = ["1", "2"]
+    @resource.save
+    @resource.list[1] = "4"
+    @resource.save
+    resource = A.first(:id => @resource.id)
+    resource.list.should == ["1", "4"]
     resource.list.class.should == Ldap::Array
   end
 

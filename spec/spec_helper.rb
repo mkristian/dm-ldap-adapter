@@ -5,11 +5,12 @@ Slf4r::LoggerFacade4RubyLogger.level = :info
 
 require 'dm-sqlite-adapter'
 require 'dm-migrations'
-#require 'dm-transactions'
+require 'dm-transactions'
 require 'pathname'
 $LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
 
-p DataMapper::VERSION
+print "datamapper version:"
+puts DataMapper::VERSION
 
 require 'ldap_resource'
 require 'adapters/ldap_adapter'
@@ -22,7 +23,7 @@ DataMapper.setup(:ldap, {
                    :base => "dc=example,dc=com",
                    :facade => (ENV['FACADE'] || :net_ldap).to_sym,
                    :bind_name => "cn=admin,dc=example,dc=com",
-                   :password => "behappy"
+                   :password => "secret"
 })
 
 module DataMapper
@@ -67,14 +68,12 @@ class User
       self
     end
     def groups.delete(group)
-p "***********" + self.inspect
       gu = GroupUser.first(:user_id => @user.id, :group_id => group.id)
       if gu
         gu.destroy
         super
       end
     end
-p "++++++++++" + groups.inspect
     groups
   end
 
