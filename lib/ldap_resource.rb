@@ -4,7 +4,82 @@ require 'ldap/array'
 
 module DataMapper
   module Model
-    module LdapResource
+   
+      def load(records, query)
+        repository      = query.repository
+        repository_name = repository.name
+        fields          = query.fields
+        discriminator   = properties(repository_name).discriminator
+        no_reload       = !query.reload?
+        
+        field_map = fields.map { |property| [ property, property.field ] }.to_hash
+        
+        records.map do |record|
+          identity_map = nil
+          key_values   = nil
+          resource     = nil
+          
+          case record
+          when Hash
+            # remap fields to use the Property object
+            record = record.dup
+            field_map.each { |property, field| record[property] = record.delete(field) if record.key?(field) }
+
+            model     = discriminator && discriminator.load(record[discriminator]) || self
+            model_key = model.key(repository_name)
+
+            resource = if model_key.valid?(key_values = record.values_at(*model_key))
+              identity_map = repository.identity_map(model)
+              identity_map[key_values]
+            end
+
+            resource ||= model.allocate
+
+            fields.each do |property|
+              next if no_reload && property.loaded?(resource)
+
+              value = record[property]
+
+              value = property.load(value)
+
+              property.set!(resource, value)
+            end
+
+          when Resource
+            model     = record.model
+            model_key = model.key(repository_name)
+            
+            resource = if model_key.valid?(key_values = record.key)
+                         identity_map = repository.identity_map(model)
+                         identity_map[key_values]
+                       end
+            
+            resource ||= model.allocate
+            
+            fields.each do |property|
+              next if no_reload && property.loaded?(resource)
+              
+              property.set!(resource, property.get!(record))
+            end
+          end
+          
+          resource.instance_variable_set(:@_repository, repository)
+          
+          if identity_map
+            resource.persisted_state = Resource::State::Clean.new(resource) unless resource.persisted_state?
+            
+            # defer setting the IdentityMap so second level caches can
+            # record the state of the resource after loaded
+            identity_map[key_values] = resource
+          else
+            resource.persisted_state = Resource::State::Immutable.new(resource)
+          end
+          
+          resource
+        end
+      end
+
+      module LdapResource
 
       Model.append_inclusions self
 

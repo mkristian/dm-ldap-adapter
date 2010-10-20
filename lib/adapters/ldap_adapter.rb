@@ -132,18 +132,24 @@ module DataMapper
             end
             ldap_conditions << [:or_operator, or_conditions, nil]
           else
-          comparator = c.slug
-          case comparator
-          when :raw
-          when :not
-              # TODO proper recursion !!!
-            ldap_conditions << [comparator, c.operands.first.subject.field, c.operands.first.send(:dumped_value)]
-          when :in
-            ldap_conditions << [:eql, c.subject.field, c.send(:dumped_value)]
-          else
-            ldap_conditions << [comparator, c.subject.field, c.send(:dumped_value)]
+            comparator = c.slug
+            case comparator
+            when :raw
+            when :not
+                # TODO proper recursion !!!
+                ldap_conditions << [comparator, c.operands.first.subject.field, c.operands.first.send(:dumped_value)]
+            when :in
+              ldap_conditions << [:eql, c.subject.field, c.send(:dumped_value)]
+            else
+              if c.subject.is_a? Ldap::LdapArray
+                # assume a single value here !!!
+                val = c.send(:dumped_value)
+                ldap_conditions << [comparator, c.subject.field, val[1, val.size - 2]]
+              else
+                ldap_conditions << [comparator, c.subject.field, c.send(:dumped_value)]
+              end
+            end
           end
-        end
         end
         ldap_conditions
       end
@@ -191,10 +197,7 @@ module DataMapper
         key = nil
         resource.send(:properties).each do |prop|
           value = prop.get!(resource)
-          if prop.class == ::DataMapper::Property::LdapArray
-puts "---------------------HERE" 
-p value
-puts
+          if prop.class == ::Ldap::LdapArray
             props[prop.field.to_sym] = value unless value.nil? or value.size == 0
           else
             props[prop.field.to_sym] = value.to_s unless value.nil?
@@ -240,12 +243,8 @@ puts
         actions = []
         attributes.each do |property, value|
           field = property.field.to_sym #TODO sym needed or string ???
-          if property.class == ::DataMapper::Property::LdapArray
-puts "====================HERE" 
-p value
-value = property.load(value)
-p resource.original_attributes[property]
-puts
+          if property.class == ::Ldap::LdapArray
+            value = property.load(value)
             if resource.original_attributes[property].nil?
               value.each do |v|
                 actions << [:add, field, v]
@@ -267,7 +266,7 @@ puts
           else
             if resource.model.multivalue_field == property.field.to_sym
               if value.nil?
-                actions << [:delete, field, resource.original_attributes[property].to_s]
+                actions << [:delete, field, resource.attribute_get(property.name).to_s]
               else
                 actions << [:add, field, value.to_s]
               end
@@ -295,8 +294,6 @@ puts
             multivalue_prop = resource.send(:properties).detect do |prop|
               prop.field.to_sym == resource.model.multivalue_field
             end
-            # set the original value so update does the right thing
-            resource.send("#{multivalue_prop.name}=".to_sym, nil)
             update_resource(resource,
                             { multivalue_prop => nil })
           else
@@ -331,8 +328,6 @@ puts
         order_by = query.order.first.target.field
         order_by_sym = order_by.to_sym
         field_names = query.fields.collect {|f| f.field }
-puts "field names"
-p field_names 
         result = ldap.read_objects(query.model.treebase,
                                    query.model.key.collect { |k| k.field },
                                    to_ldap_conditions(query),
@@ -360,15 +355,10 @@ p field_names
           end
           props_result
         else # no multivalue field
-p result #if field_names.member? "mail"
           result.collect do |props|
             query.fields.collect do |f|
               prop = props[f.field.to_sym]
-              if f.class == DataMapper::Property::LdapArray
-puts "+++++++++++++++++++++++HERE" 
-p query.fields
-p prop
-puts
+              if f.class == Ldap::LdapArray
                 prop if prop
               elsif prop
                 f.primitive == Integer ? prop.first.to_i : prop.first
