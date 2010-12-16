@@ -80,7 +80,8 @@ module Ldap
             v.setup(self, properties[:#{name}])
           else
             vv = Ldap::Array.new(self, properties[:#{name}])
-            vv.replace(v)
+            vv.replace(v | [])
+            v = vv
           end
           attribute_set(:#{name}, v)
         end
@@ -92,7 +93,7 @@ module Ldap
             v.setup(self, properties[:#{name}])
           else
             vv = Ldap::Array.new(self, properties[:#{name}])
-            vv.replace(v)
+            vv.replace(v || [])
           end
         end
       RUBY
