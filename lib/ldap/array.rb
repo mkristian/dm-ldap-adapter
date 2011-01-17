@@ -16,9 +16,10 @@ module Ldap
     alias :push! :push
 
     def []=(k, v)
-      result = super
-      @resource.send("#{@property.name}=".to_sym, self)
-      result
+      ar = [self].flatten
+      ar[k] = v
+      @resource.send("#{@property.name}=".to_sym, ar)
+      super
     end
 
     def <<(element)
@@ -26,17 +27,19 @@ module Ldap
     end
 
     def push(element)
-      result = super
-      @resource.send("#{@property.name}=".to_sym, self)
-      result
+      ar = [self].flatten
+      ar.push(element)
+      @resource.send("#{@property.name}=".to_sym, ar)
+      super
     end
 
    alias :delete! :delete
 
     def delete(element)
-      result = super
-      @resource.send(:"#{@property.name}=", self)
-      result
+      ar = [self].flatten
+      ar.delete(element)
+      @resource.send(:"#{@property.name}=", ar)
+      super
     end
   end
 
@@ -80,7 +83,7 @@ module Ldap
             v.setup(self, properties[:#{name}])
           else
             vv = Ldap::Array.new(self, properties[:#{name}])
-            vv.replace(v | [])
+            vv.replace(v || [])
             v = vv
           end
           attribute_set(:#{name}, v)
