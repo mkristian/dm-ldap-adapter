@@ -1,5 +1,5 @@
 require "dm-core"
-require 'slf4r'
+require 'slf4r/logger'
 # require 'adapters/noop_transaction'
 
 module Ldap
