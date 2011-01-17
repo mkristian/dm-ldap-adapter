@@ -23,7 +23,7 @@ DataMapper.setup(:ldap, {
                    :base => "dc=example,dc=com",
                    :facade => (ENV['FACADE'] || :net_ldap).to_sym,
                    :bind_name => "cn=admin,dc=example,dc=com",
-                   :password => "secret"
+                   :password => "behappy"
 })
 
 module DataMapper
