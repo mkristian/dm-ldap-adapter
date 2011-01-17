@@ -34,6 +34,14 @@ describe DataMapper::Adapters::LdapAdapter do
     end
   end
 
+  it 'should be able to use multiline attributes' do
+    DataMapper.repository(:ldap) do
+      @user1.name = "many\nlines\nin\none\property"
+      @user1.save
+      User.get(@user1.id).name.should == "many\nlines\nin\none\property"
+    end
+  end
+
   it 'should raise an error when trying to create an entity with already used key' do
     DataMapper.repository(:ldap) do
       #p User.first(:login => "black")
@@ -229,5 +237,3 @@ describe DataMapper::Adapters::LdapAdapter do
     end
   end
 end
-
-\

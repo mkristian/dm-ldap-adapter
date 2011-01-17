@@ -361,7 +361,7 @@ module DataMapper
               if f.class == Ldap::LdapArray
                 prop if prop
               elsif prop
-                f.primitive == Integer ? prop.first.to_i : prop.first
+                f.primitive == Integer ? prop.first.to_i : prop.join
               end
             end
           end
