@@ -149,5 +149,14 @@ describe DataMapper.repository(:ldap).adapter.class do
         TestContact.all(:mail => "email1").first.should == @contact
       end
     end
+
+    it 'should be able to use multilines with LdapArray' do
+      pending "not working for net-ldap" if DataMapper.repository(:ldap).adapter.ldap.class.to_s == 'Ldap::NetLdapFacade'
+      DataMapper.repository(:ldap) do
+        @contact.mail = ["email1\nmail2\nmail2\nmail4", "email1"]
+        @contact.save
+        TestContact.get(@contact.id).mail.should == ["email1\nmail2\nmail2\nmail4", "email1"]
+      end
+    end
   end
 end

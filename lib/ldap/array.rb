@@ -57,7 +57,7 @@ module Ldap
 
     def load(value)
       result = case value
-               when ::String then value.gsub(/^.|.$/,'').split('","').to_a.freeze
+               when ::String then value[1, value.size-2].split('","').to_a.freeze
                when ::Array then value.freeze
                else
                  []

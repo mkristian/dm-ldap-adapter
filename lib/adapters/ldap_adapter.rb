@@ -347,7 +347,7 @@ module DataMapper
                   value
                 else
                   prop = props[f.field.to_sym].first
-                  f.primitive == Integer ? prop.to_i : prop
+                  f.primitive == Integer ? prop.to_i : prop.join
                 end
               end
               props_result << values
