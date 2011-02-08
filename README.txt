@@ -46,8 +46,6 @@ or
 
 see 'example/posix.rb' for user/group setup works with default installation of openldap on ubuntu (just change your password as needed in the code)
 
-the 'example/identity_map.rb' shows the usage of identity maps, see also below.
-
 == FEATURES/PROBLEMS:
 
 * the net-ldap has some issues with not closing the connections when an exception/error got raised, with limit the search result to 126 entries which gets fixed by making consecutives searches and collect the result.
@@ -62,7 +60,7 @@ there are three parts which makes the DN of a model, the base from the ldap conn
 
     class User
       include DataMapper::Resource
-      property :id, Serial, :field => "uidnumber"
+      property :id, Serial, :field => "uidNumber"
       dn_prefix { |user| "uid=#{user.login}"}
       treebase "ou=people"
     end
@@ -77,7 +75,7 @@ for example the ldap posixGroup has more attributes than the model class, it nee
 
     class Group
       include DataMapper::Resource
-      property :id, Serial, :field => "gidnumber"
+      property :id, Serial, :field => "gidNumber"
       property :name,     String, :field => "cn"
       dn_prefix { |group| "cn=#{group.name}" }
       treebase "ou=groups"
@@ -169,8 +167,8 @@ staying with posix example there the groups has a memberuid attribute BUT unlike
 
     class GroupUser
       include DataMapper::Resource
-      property :memberuid, String, :key => true
-      property :gidnumber, Integer, :key => true
+      property :memberUid, String, :key => true
+      property :gidNumber, Integer, :key => true
       dn_prefix { |group_user| "cn=#{group_user.group.name}" }
       treebase "ou=groups"
       ldap_properties do |group_user|
@@ -187,14 +185,14 @@ let's say your LDAP has multiple email values for a users then you can define yo
 
     class User
       include DataMapper::Resource
-      property :id,        Serial, :field => "uidnumber"
+      property :id,        Serial, :field => "uidNumber"
       property :login,     String, :field => "uid", :unique_index => true
       property :mail,      LdapArray
 
       dn_prefix { |user| "uid=#{user.login}"}
       treebase "ou=people"
       ldap_properties do |user|
-        properties = { :objectclass => ["inetOrgPerson", "posixAccount", "shadowAccount"], :loginshell => "/bin/bash", :gidnumber => "10000" }
+        properties = { :objectclass => ["inetOrgPerson", "posixAccount", "shadowAccount"], :loginshell => "/bin/bash", :gidNumber => "10000" }
        properties
       end
     end

@@ -1,19 +1,19 @@
 require 'pathname'
 require 'rubygems'
-require 'slf4r/logging_logger'
-gem 'data_objects' , "0.9.11"
+require 'slf4r/logger'
+require 'slf4r/ruby_logger'
 require 'dm-core'
 
 $LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
 
-Logging.init :debug, :info, :warn, :error
+# Logging.init :debug, :info, :warn, :error
 
-appender = Logging::Appender.stdout
-appender.layout = Logging::Layouts::Pattern.new(:pattern => "%d [%-l] (%c) %m\n")
-logger = Logging::Logger.new(:root)
-logger.add_appenders(appender)
-logger.level = :debug
-logger.info "initialized logger . . ."
+# appender = Logging::Appender.stdout
+# appender.layout = Logging::Layouts::Pattern.new(:pattern => "%d [%-l] (%c) %m\n")
+# logger = Logging::Logger.new(:root)
+# logger.add_appenders(appender)
+# logger.level = :debug
+# logger.info "initialized logger . . ."
 
 dummy = true  #uncomment this to use dummy, i.e. a database instead of ldap
 dummy = false # uncomment this to use ldap
@@ -49,9 +49,9 @@ end
 class User
   include DataMapper::Resource
 
-  property :id,        Serial, :field => "uidnumber"
+  property :id,        Serial, :field => "uidNumber"
   property :login,     String, :field => "uid"
-  property :hashed_password,  String, :field => "userpassword", :access => :private
+  property :hashed_password,  String, :field => "userPassword"
   property :name,      String, :field => "cn"
 
   has n, :group_users, :child_key => [:memberuid]
@@ -99,7 +99,7 @@ end
 class Group
   include DataMapper::Resource
   include Slf4r::Logger
-  property :id,       Serial, :field => "gidnumber"
+  property :id,       Serial, :field => "gidNumber"
   property :name,     String, :field => "cn"
 
   dn_prefix { |group| "cn=#{group.name}" }
@@ -145,8 +145,8 @@ class GroupUser
   ldap_properties do |group_user|
     {:cn=>"#{group_user.group.name}",  :objectclass => "posixGroup"}
   end
-  property :memberuid, String, :key => true#, :field => "memberuid"
-  property :gidnumber, Integer, :key => true#, :field => "gidnumber"
+  property :memberuid, String, :key => true#, :field => "memberUid"
+  property :gidnumber, Integer, :key => true#, :field => "gidNumber"
 
   def group
     Group.get!(gidnumber)
