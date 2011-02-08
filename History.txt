@@ -1,3 +1,13 @@
+version 0.4.2
+=============
+
+* Serial fieldnames are case insensitive now, i.e. allow capital as well 
+
+version 0.4.1
+=============
+
+* mutliline values inside Ldap::Array
+
 version 0.3.5
 =============
 
