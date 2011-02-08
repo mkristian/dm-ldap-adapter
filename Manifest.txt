@@ -6,8 +6,6 @@ Manifest.txt
 README-example.markdown
 README.txt
 Rakefile
-env.sh
-example/identity_map.rb
 example/posix.rb
 ldap-commands.txt
 lib/adapters/ldap_adapter.rb
