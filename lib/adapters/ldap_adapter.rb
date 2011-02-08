@@ -316,7 +316,7 @@ module DataMapper
         end
 
 #puts "read_many"
-#p result.size
+#p result
         result = result.uniq if query.unique?
         result = query.match_records(result) if query.model.multivalue_field
         result = query.sort_records_case_insensitive(result)
@@ -332,11 +332,6 @@ module DataMapper
                                    query.model.key.collect { |k| k.field },
                                    to_ldap_conditions(query),
                                    field_names, order_by)
-#.sort! do |u1, u2|
-#          value1 = u1[order_by_sym].first.upcase rescue ""
-#          value2 = u2[order_by_sym].first.upcase rescue ""
-#          value1 <=> value2
-#        end
         if query.model.multivalue_field
           props_result = []
           result.each do |props|
@@ -367,8 +362,6 @@ module DataMapper
           end
         end
       end
-
-#      include ::DataMapper::Transaction::Adapter
     end
   end
 end
