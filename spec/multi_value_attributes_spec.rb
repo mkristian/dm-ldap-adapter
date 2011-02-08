@@ -4,9 +4,9 @@ require 'spec_helper'
 class TestContact
   include DataMapper::Resource
 
-  property :id,        Serial, :field => "uidnumber"
+  property :id,        Serial, :field => "uidNumber"
   property :login,     String, :field => "uid", :unique_index => true
-  property :hashed_password,  String, :field => "userpassword", :lazy => true
+  property :hashed_password,  String, :field => "userPassword", :lazy => true
   property :name,      String, :field => "cn"
   property :mail,      ::Ldap::LdapArray
 

@@ -44,10 +44,10 @@ class User
   include DataMapper::Resource
   property :id,        Serial, :field => "uidnumber"
   property :login,     String, :field => "uid", :unique_index => true
-  property :hashed_password,  String, :field => "userpassword", :writer => :private
+  property :hashed_password,  String, :field => "userPassword", :writer => :private
   property :name,      String, :field => "cn"
   property :mail,      String
-  property :age,       Integer, :field => "postalcode"
+  property :age,       Integer, :field => "postalCode"
   property :alive,     Boolean, :field => "gecos"
 
   has n, :roles
@@ -96,7 +96,7 @@ end
 
 class Role
   include DataMapper::Resource
-  property :id,       Serial, :field => "gidnumber"
+  property :id,       Serial, :field => "gidNumber"
   property :name,     String, :field => "cn"
 
   dn_prefix { |role| "cn=#{role.name}" }
@@ -110,7 +110,7 @@ end
 
 class Group
   include DataMapper::Resource
-  property :id,       Serial, :field => "gidnumber"
+  property :id,       Serial, :field => "gidNumber"
   property :name,     String, :field => "cn"
 
   dn_prefix { |group| "cn=#{group.name}" }
@@ -127,14 +127,14 @@ class GroupUser
 
   treebase "ou=groups"
 
-  multivalue_field :memberuid
+  multivalue_field :memberUid
 
   ldap_properties do |group_user|
     {:cn=>"#{group_user.group.name}",  :objectclass => "posixGroup"}
   end
 
-  property :user_id, Integer, :key => true, :field => "memberuid"
-  property :group_id, Integer, :key => true, :field => "gidnumber"
+  property :user_id, Integer, :key => true, :field => "memberUid"
+  property :group_id, Integer, :key => true, :field => "gidNumber"
 
   def group
     Group.get!(group_id)
