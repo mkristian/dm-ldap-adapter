@@ -62,8 +62,7 @@ module Ldap
         LDAP.mod(LDAP::LDAP_MOD_ADD, k.to_s, v.is_a?(::Array) ? v : [v.to_s] )
       end
       if @ldap2.add( dn(dn_prefix, treebase), mods)
-#                    :attributes => props) and @ldap.get_operation_result.code.to_s == "0"
-        props[key_field.downcase.to_sym]
+        props[key_field.to_sym]
       else
         unless silence
           msg = ldap_error("create",
@@ -91,14 +90,13 @@ module Ldap
                     LDAP::LDAP_SCOPE_SUBTREE,
                     filter.to_s == "" ? "(objectclass=*)" : filter.to_s.gsub(/\(\(/, "(").gsub(/\)\)/, ")"),
                     field_names, false, 0, 0, order_field) do |res|
-
-        map = to_map(res)
-        #puts map[key_field.to_sym]
+        mapp = to_map(field_names, res)
         # TODO maybe make filter which removes this unless
         # TODO move this into the ldap_Adapter to make it more general, so that
         # all field with Integer gets converted, etc
-        result << map if key_fields.detect do |key_field|
-            map.member? key_field.to_sym
+        # NOTE: somehow the fields are downcase coming from query.model
+        result << mapp if key_fields.detect do |key_field|
+            mapp.keys.detect {|k| k.to_s.downcase == key_field.downcase }
           end
         end
       end
@@ -174,10 +172,12 @@ module Ldap
     # helper to extract the Hash from the ldap search result
     # @param Entry from the ldap_search
     # @return Hash with name/value pairs of the entry
-    def to_map(entry)
+    def to_map(field_names, entry)
+      fields = {:dn => :dn}
+      field_names.each { |f| fields[f.downcase.to_sym] = f.to_sym }
       map = {}
       LDAP::entry2hash(entry).each do |k,v|
-        map[k.downcase.to_sym] = v
+        map[fields[k.downcase.to_sym]] = v
       end
       map
     end
