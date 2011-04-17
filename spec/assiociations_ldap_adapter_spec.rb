@@ -7,12 +7,22 @@ describe DataMapper::Adapters::LdapAdapter do
     DataMapper.repository(:ldap) do
       User.all(:login.like => "b%").destroy!
       Group.all(:name.like => "test_%").destroy!
-      @user1 = User.create(:login => "black", :name => 'Black', :age => 0)
-      @user2 = User.create(:login => "brown", :name => 'Brown', :age => 25)
-      @user3 = User.create(:login => "blue", :name => 'Blue',  :age => nil)
+      
+      #First we create some items.
+      user1 = User.create(:login => "black", :name => 'Black', :age => 0)
+      user2 = User.create(:login => "brown", :name => 'Brown', :age => 25)
+      user3 = User.create(:login => "blue", :name => 'Blue',  :age => nil)
 
-      @group1 = Group.create(:name => "test_root_group")
-      @group2 = Group.create(:name => "test_admin_group")
+      group1 = Group.create(:name => "test_root_group")
+      group2 = Group.create(:name => "test_admin_group")
+      
+      #Then we retrive the items we created earlier and use them for tests.
+      @user1 = User.get!(user1.id)
+      @user2 = User.get!(user2.id)
+      @user2 = User.get!(user3.id)
+      
+      @group1 = Group.get!(group1.id)
+      @group2 = Group.get!(group2.id)      
     end
   end
   
@@ -143,12 +153,16 @@ describe DataMapper::Adapters::LdapAdapter do
 
   it 'should be able to delete a user from a group' do
     DataMapper.repository(:ldap) do
-      size = GroupUser.all.size
-      @user1 = User.get!(@user1.id)
+      size_before = GroupUser.all.size
+
       @user1.groups << @group1
+      GroupUser.all.size.should == size_before+1
+  
       @user1.groups << @group2
+      GroupUser.all.size.should == size_before+2
+
       @user2.groups << @group1
-      GroupUser.all.size.should == size + 3
+      GroupUser.all.size.should == size_before+3
     end
     DataMapper.repository(:ldap) do
       @user1 = User.get!(@user1.id)
