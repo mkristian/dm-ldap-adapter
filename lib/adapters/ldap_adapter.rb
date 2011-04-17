@@ -82,6 +82,8 @@ module DataMapper
     end
 
     def sort_records_case_insensitive(records)
+      #Return unsorted records unless we have order defined
+      return records unless order
       sort_order = order.map { |direction| [ direction.target, direction.operator == :asc ] }
 
       records.sort_by do |record|
@@ -325,8 +327,10 @@ module DataMapper
       end
 
       def read_resources(query)
-        order_by = query.order.first.target.field
-        order_by_sym = order_by.to_sym
+        query_order = query.order.first.target.field if query.order
+        #Use empty string as default for order in query
+        order_by = query_order || ''
+
         field_names = query.fields.collect {|f| f.field }
         result = ldap.read_objects(query.model.treebase,
                                    query.model.key.collect { |k| k.field },
