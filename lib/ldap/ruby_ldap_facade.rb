@@ -148,15 +148,21 @@ module Ldap
     # @param dn String for identifying the ldap object
     # @param password String to be used for authenticate to the dn
     def authenticate(dn, password)
-      Net::LDAP.new( { :host => @ldap2.host,
-                       :port => @ldap2.port,
-                       :auth => {
-                         :method => :simple,
-                         :username => dn,
-                         :password => password
-                       },
-                       :base => @ldap2.base
-                     } ).bind
+      bound = false
+      ldap_con = LDAP::Conn.new(@ldap2.host, @ldap2.port)
+      ldap_con.set_option( LDAP::LDAP_OPT_PROTOCOL_VERSION, 3 )
+      begin
+        ldap_con.bind(dn, password, LDAP::LDAP_AUTH_SIMPLE) do
+          bound = true
+        end
+      rescue LDAP::ResultError => msg
+        if msg.to_s =~ /Invalid\ credentials/i
+          logger.info("Invalid Credentials: #{dn}")
+        else 
+          logger.warn "Authentication Error: #{msg.to_s}"
+        end
+      end
+      bound
     end
 
     # helper to concat the dn from the various parts
