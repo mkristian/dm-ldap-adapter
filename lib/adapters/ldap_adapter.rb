@@ -85,7 +85,7 @@ module DataMapper
       #Return unsorted records unless we have order defined
       return records unless order
       sort_order = order.map { |direction| [ direction.target, direction.operator == :asc ] }
-
+      
       records.sort_by do |record|
         sort_order.map do |(property, ascending)|
           SortCaseInsensitive.new(record_value(record, property), ascending)
@@ -308,6 +308,7 @@ module DataMapper
       # @see AbstractAdapter#read
       def read(query)
         result = []
+        #get data values out of the query
         resources = read_resources(query)
         resources.each do |resource|
           map = {}
