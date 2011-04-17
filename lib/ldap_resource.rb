@@ -12,7 +12,8 @@ module DataMapper
         discriminator   = properties(repository_name).discriminator
         no_reload       = !query.reload?
         
-        field_map = fields.map { |property| [ property, property.field ] }.to_hash
+        field_map = {}
+        fields.each { |property| field_map[property] = property.field }
         
         records.map do |record|
           identity_map = nil
