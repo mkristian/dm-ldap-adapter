@@ -1,3 +1,11 @@
+## Create top level directory
+dn: dc=example,dc=com
+dc: example
+o: Example
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+
 dn: ou=people,dc=example,dc=com
 objectClass: organizationalUnit
 ou: people
@@ -43,4 +51,4 @@ gidNumber: 10000
 userPassword: {SSHA}/o6oa2GOphls/lzOFCwVkw9ARWEEiw+x
 mail: bill@web.de
 loginShell: /bin/false
-homeDirectory: /root
+homeDirectory: /test
