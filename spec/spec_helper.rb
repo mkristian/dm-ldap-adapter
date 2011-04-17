@@ -1,7 +1,7 @@
 require 'rubygems'
 
 require 'slf4r/ruby_logger'
-Slf4r::LoggerFacade4RubyLogger.level = :info
+Slf4r::LoggerFacade4RubyLogger.level = :warn
 
 require 'dm-sqlite-adapter'
 require 'dm-migrations'
