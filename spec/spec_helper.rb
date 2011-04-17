@@ -56,10 +56,13 @@ class User
 
   def groups
     groups = GroupUser.all(:user_id => login).collect{ |gu| gu.group }
+
     def groups.user=(user)
       @user = user
     end
+
     groups.user = self
+
     def groups.<<(group)
       unless member? group
         GroupUser.create(:user_id => @user.login, :group_id => group.id)
@@ -67,6 +70,7 @@ class User
       end
       self
     end
+
     def groups.delete(group)
       gu = GroupUser.first(:user_id => @user.login, :group_id => group.id)
       if gu
@@ -74,6 +78,7 @@ class User
         super
       end
     end
+
     groups
   end
 
