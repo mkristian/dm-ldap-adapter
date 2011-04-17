@@ -83,12 +83,21 @@ module Ldap
     # @param Array of conditions for the search
     # @return Array of Hashes with a name/values pair for each attribute
     def read_objects(treebase, key_fields, conditions, field_names, order_field = '')      
-      filter = Conditions2Filter.convert(conditions)
+      
+      if !conditions.nil? and conditions.size > 0
+        filter_string = Conditions2Filter.convert(conditions).to_s
+      else
+        filter_string = "(objectclass=*)"
+      end
+
+      filter = filter_string.gsub(/\(\(/, "(")
+      #.gsub(/\)\)/, ")")
+
       result = []
       begin
       @ldap2.search("#{treebase},#{@ldap2.base}",
                     LDAP::LDAP_SCOPE_SUBTREE,
-                    filter.to_s == "" ? "(objectclass=*)" : filter.to_s.gsub(/\(\(/, "(").gsub(/\)\)/, ")"),
+                    filter,
                     field_names, false, 0, 0, order_field) do |res|
         mapp = to_map(field_names, res)
         # TODO maybe make filter which removes this unless
