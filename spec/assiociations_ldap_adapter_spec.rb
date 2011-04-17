@@ -19,7 +19,7 @@ describe DataMapper::Adapters::LdapAdapter do
       #Then we retrive the items we created earlier and use them for tests.
       @user1 = User.get!(user1.id)
       @user2 = User.get!(user2.id)
-      @user2 = User.get!(user3.id)
+      @user3 = User.get!(user3.id)
       
       @group1 = Group.get!(group1.id)
       @group2 = Group.get!(group2.id)      
