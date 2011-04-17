@@ -1,7 +1,7 @@
 *~
-pkg
-.bundle
-target
 *.gem
+.bundle
 Gemfile.lock
 Gemfile.pom
+pkg/*
+target/*
