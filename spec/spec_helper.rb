@@ -90,7 +90,8 @@ class User
   end
 
   def password=(password)
-    attribute_set(:hashed_password, Ldap::Digest.ssha(password, "--#{Time.now}--#{login}--")) if password
+    salt = "--#{Time.now}--#{login}--"
+    attribute_set(:hashed_password, Ldap::Digest.ssha(password, salt)) if password
   end
 end
 
