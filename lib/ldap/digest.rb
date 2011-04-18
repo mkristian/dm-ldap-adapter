@@ -1,4 +1,11 @@
-require 'sha1'
+begin
+  require 'sha1'
+rescue LoadError
+  # ruby1.9.x
+  require 'digest/sha1'
+  SHA1 = Digest::SHA1
+end
+
 require 'base64'
 module Ldap
   class Digest
