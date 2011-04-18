@@ -173,9 +173,7 @@ module DataMapper
 
       def create(resources)
         resources.select do |resource|
-
           create_resource(resource)
-
         end.size # just return the number of create resources
       end
 
