@@ -4,7 +4,6 @@ require 'spec_helper'
 describe DataMapper::Adapters::LdapAdapter do
 
   before do
-
     DataMapper.repository(:ldap) do
       User.all(:login.like => "b%").destroy!
       Group.all(:name.like => "test_%").destroy!
@@ -15,6 +14,21 @@ describe DataMapper::Adapters::LdapAdapter do
       @group1 = Group.create(:name => "test_root_group")
       @group2 = Group.create(:name => "test_admin_group")
     end
+  end
+  
+  after(:all) do
+    DataMapper.repository(:ldap) do
+      User.all(:login.like => "b%").destroy!
+      Group.all(:name.like => "test_%").destroy!
+    end
+  end
+  
+  it 'should have valid testing data' do
+    @user1.should be_a_kind_of(User)
+    @user2.should be_a_kind_of(User)
+    @user3.should be_a_kind_of(User)
+    @group1.should be_a_kind_of(Group)
+    @group2.should be_a_kind_of(Group)
   end
 
   it 'should successfully save an object' do
