@@ -1,1 +1,1 @@
-require 'adapter/ldap-adpter'
+require 'adapter/ldap-adapter'
