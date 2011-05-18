@@ -1,7 +1,7 @@
-env.sh
 *~
-doc
 pkg
-.yardoc
-.source_index
+.bundle
 target
+*.gem
+Gemfile.lock
+Gemfile.pom

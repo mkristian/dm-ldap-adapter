@@ -55,20 +55,20 @@ class User
   has n, :group_users
 
   def groups
-    groups = GroupUser.all(:user_id => id).collect{ |gu| gu.group }
+    groups = GroupUser.all(:user_id => login).collect{ |gu| gu.group }
     def groups.user=(user)
       @user = user
     end
     groups.user = self
     def groups.<<(group)
       unless member? group
-        GroupUser.create(:user_id => @user.id, :group_id => group.id)
+        GroupUser.create(:user_id => @user.login, :group_id => group.id)
         super
       end
       self
     end
     def groups.delete(group)
-      gu = GroupUser.first(:user_id => @user.id, :group_id => group.id)
+      gu = GroupUser.first(:user_id => @user.login, :group_id => group.id)
       if gu
         gu.destroy
         super
@@ -133,7 +133,7 @@ class GroupUser
     {:cn=>"#{group_user.group.name}",  :objectclass => "posixGroup"}
   end
 
-  property :user_id, Integer, :key => true, :field => "memberUid"
+  property :user_id, String, :key => true, :field => "memberUid"
   property :group_id, Integer, :key => true, :field => "gidNumber"
 
   def group
