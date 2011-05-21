@@ -26,6 +26,8 @@ DataMapper.setup(:ldap, {
                    :password => "behappy"
 })
 
+puts "using facade #{(ENV['FACADE'] || :net_ldap).to_sym}"
+
 module DataMapper
   module Resource
     class State
