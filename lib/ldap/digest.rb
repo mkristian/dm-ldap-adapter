@@ -16,7 +16,7 @@ module Ldap
     # @return the encoded password/salt
     def self.ssha(secret, salt)
       (salt.empty? ? "{SHA}": "{SSHA}") +
-        Base64.encode64(::Digest::SHA1.digest(secret + salt) + salt).chomp!
+        Base64.encode64(::Digest::SHA1.digest(secret + salt) + salt).gsub(/\n/, '')
     end
 
     # method from openldap faq which produces the userPassword attribute
