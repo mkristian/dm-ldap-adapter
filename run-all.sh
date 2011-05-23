@@ -17,33 +17,26 @@ run_bundler() {
 }
 
 run_maven(){
-    jruby_version=$1
+    jruby_versions=$1
     shift
-#    ruby_version=$1
-#    shift
     for version in $@ ; do
 	echo
 	echo "-----------------------------------"
-	echo "run specs with ruby-maven in ${ruby_version} mode"
-	echo "jruby version $jruby_version"
+	echo "run specs with ruby-maven"
+	echo "jruby version $jruby_versions"
         echo "datamapper base version $version"
 	echo "-----------------------------------"
 	rm -f Gemfile.lock
 	rm -f Gemfile.pom
 	ln -s Gemfile.lock.$version Gemfile.lock
 	rm -rf target/rubygems
-	rmvn spec spec -- -Djruby.18and19 -Djruby.version=$jruby_version # -Djruby.switches=--$ruby_version
+	rmvn spec spec -- -Djruby.18and19 -Djruby.versions=$jruby_versions
     done
 }
 
-VERSIONS='1.0.0 1.1.0'
-
 # iterate over all supported jruby versions
-for jv in 1.5.6 1.6.1 ; do
-    run_maven $jv $VERSIONS || exit -1
-done
-# 1.9 mode in jruby-1.5.6 is not working good enough
-#run_maven 1.6.1 1.9 $VERSIONS || exit -1
+VERSIONS='1.0.0 1.1.0'
+run_maven 1.5.6,1.6.1 $VERSIONS || exit -1
 
 # take only the latest (j)ruby version (on ubuntu naming convnetion)
 run_bundler 'jruby --1.8' $VERSIONS || exit -1
