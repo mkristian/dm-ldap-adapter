@@ -9,8 +9,10 @@ class A
   include DataMapper::Resource
 
   property :id, Serial
-
-  property :list, ::Ldap::LdapArray
+  property :list, ::Ldap::LdapArray,            :accessor => :public
+  property :hidden_list,  ::Ldap::LdapArray,    :accessor => :private
+  property :write_list,   ::Ldap::LdapArray,    :reader => :private, :writer => :public
+  property :read_list,    ::Ldap::LdapArray,    :reader => :public, :writer => :private
 end
 
 require 'fileutils'
@@ -72,4 +74,49 @@ describe Ldap::LdapArray do
     resource.list.should == ["2"]
     resource.list.class.should == Ldap::Array
   end
+  
+  context 'when :accessor property is set to :private' do 
+    it 'should not create a write accessor' do
+      @resource.should_not respond_to(:hidden_list=)
+    end
+
+    it 'should not create a reade accessor' do
+      @resource.should_not respond_to(:hidden_list)
+    end  
+  end
+
+  context 'when :accessor property is set to :public' do 
+    it 'should create a write accessor' do
+      @resource.should respond_to(:list=)
+    end
+
+    it 'should create a reade accessor' do
+      @resource.should respond_to(:list)
+    end  
+  end
+  
+  context 'when :writer property is set to :public' do
+    it 'should create a write accessor' do
+      @resource.should respond_to(:write_list=)
+    end
+  end
+
+  context 'when :writer property is set to :private' do
+    it 'should not create a write accessor' do
+      @resource.should_not respond_to(:read_list=)
+    end
+  end
+
+  context 'when :reader property is set to :public' do
+    it 'should create a read accessor' do
+      @resource.should respond_to(:read_list)
+    end
+  end
+
+  context 'when :reader property is set to :private' do
+    it 'should not create a read accessor' do
+      @resource.should_not respond_to(:write_list)
+    end
+  end
+
 end

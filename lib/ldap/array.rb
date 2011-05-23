@@ -74,32 +74,45 @@ module Ldap
                end
     end
 
-    def initialize(*args)
+    def initialize(model, name, options = {})
       super
-      model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
-        def #{name.to_s}=(v)
-          case v
-          when Ldap::Array
-            v.setup(self, properties[:#{name}])
-          else
-            vv = Ldap::Array.new(self, properties[:#{name}])
-            vv.replace(v || [])
-            v = vv
+      
+      no_writer = options[:writer] == :private || options[:accessor] == :private
+      no_reader = options[:reader] == :private || options[:accessor] == :private    
+      
+      unless no_writer
+        #Creates instance method for writer
+        model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
+          def #{name.to_s}=(v)
+            case v
+            when Ldap::Array
+              v.setup(self, properties[:#{name}])
+            else
+              vv = Ldap::Array.new(self, properties[:#{name}])
+              vv.replace(v || [])
+              v = vv
+            end
+            attribute_set(:#{name}, v)
           end
-          attribute_set(:#{name}, v)
-        end
-
-        def #{name.to_s}
-          v = attribute_get(:#{name})
-          case v
-          when Ldap::Array
-            v.setup(self, properties[:#{name}])
-          else
-            vv = Ldap::Array.new(self, properties[:#{name}])
-            vv.replace(v || [])
+        RUBY
+      end #writer definition
+      
+      unless no_reader
+        #Creates instance method for reader
+        model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
+          def #{name.to_s}
+            v = attribute_get(:#{name})
+            case v
+            when Ldap::Array
+              v.setup(self, properties[:#{name}])
+            else
+              vv = Ldap::Array.new(self, properties[:#{name}])
+              vv.replace(v || [])
+            end
           end
-        end
-      RUBY
+        RUBY
+      end #reader definition
+      
     end
   end
 end
