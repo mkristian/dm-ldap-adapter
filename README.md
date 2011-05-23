@@ -1,14 +1,14 @@
-= dm-ldap-adapter
+# dm-ldap-adapter
 
-*Homepage*:  [http://dm-ldap-adapter.rubyforge.org]
+*Homepage*: [http://github.com/mkristian/dm-ldap-adapter](http://github.com/mkristian/dm-ldap-adapter)
 
-*Git*:       [http://github.com/mkristian/dm-ldap-adapter]
+*Git*: [git://github.com/mkristian/dm-ldap-adapter.git](git://github.com/mkristian/dm-ldap-adapter.git)
 
 *Author*:    Kristian Meier
 
 *Copyright*: 2008-2009
 
-== Note on Patches/Pull Requests
+## Note on Patches/Pull Requests
 
 * Fork the project.
 
@@ -20,13 +20,13 @@
 
 * Send me a pull request.
 
-== DESCRIPTION:
+## DESCRIPTION:
 
-=== usecase
+### usecase
 
 the usecase for that implementation was using an ldap server for user authentication and authorization. the ldap server is configured to have posixAccounts and posixGroups. on the datamapper side these accounts/groups are modeled with many-to-many relationship. further more the model classes should be in such a way that they can be used with another repository as well, i.e. they carry some ldap related configuration but this is only relevant for the ldap-adapter.
 
-=== low level ldap library
+### low level ldap library
 
 the ldap library which does the actual ldap protocol stuff is [http://rubyforge.org/projects/net-ldap] which is the default. the other ldap library is [http://rubyforge.org/projects/ruby-ldap]. just add a facade parameter when setting up DataMapper
 
@@ -42,7 +42,7 @@ or
                    :facade => :net_ldap,
      .... })
 
-=== setup DataMapper
+### setup DataMapper
 
     DataMapper.setup(:ldap, {
                    :adapter  => 'ldap',
@@ -54,19 +54,19 @@ or
                    :password => "behappy"
      })
 
-=== examples
+### examples
 
 see 'example/posix.rb' for user/group setup works with default installation of openldap on ubuntu (just change your password as needed in the code)
 
-== FEATURES/PROBLEMS:
+## FEATURES/PROBLEMS:
 
 * the net-ldap has some issues with not closing the connections when an exception/error got raised, with limit the search result to 126 entries which gets fixed by making consecutives searches and collect the result.
 
 * error from the ldap server are only logged and do not raise any exceptions (to be changed in next release) with one exception: when creating a new ldap entry a duplicated entry will raise DataMapper::PersistenceError
 
-== SYNOPSIS:
+## SYNOPSIS:
 
-=== distinguished name (DN) of a model
+### distinguished name (DN) of a model
 
 there are three parts which makes the DN of a model, the base from the ldap conncetion, the `treebase` of the model and `dn_prefix` of an instance.
 
@@ -81,7 +81,7 @@ with a base `dc=example,dc=com` we get a DN like the user 'admin'
 
     uid=admin,ou=people,dc=example,dc=com
 
-=== ldap entities are bigger than the model
+### ldap entities are bigger than the model
 
 for example the ldap posixGroup has more attributes than the model class, it needs the `objectclass` attribute set to `posixGroup`.
 
@@ -96,11 +96,11 @@ for example the ldap posixGroup has more attributes than the model class, it nee
 
 so with the help of the `ldap_properties` you can define a block which returns an hash with extra attributes. with such block you can make some calculations if needed, i.e. :homedirectory => "/home/#{login}" for the posixAccount.
 
-=== authentication
+### authentication
 
 this uses the underlying bind of a ldap connection. so on any model where you have the `dn_prefix` and the `treebase` configured, you can call the method `authenticate(password)`. this will forward the request to the ldap server.
 
-=== queries
+### queries
 
 conditions in ldap depend on the attributes definition in the ldap schema. here is the list of what is working with that ldap adapter side and the usual AND between the conditions:
 
@@ -122,13 +122,13 @@ and
 
 gives the same result when *all* names are `NULL` !!!
 
-=== OR conditions
+### OR conditions
 
 or-conditions can be done with :conditions option but only of the form "<property_name> <comparator> <value> [or <property_name> <comparator> <value>]*" where the comparator is one of "=", "like". it can be also combined with extra ANDs like this example
 
     Contact.all(:name.like => "A%", :conditions => ["phone like '+49%' or mobile like '+49%'"])
 
-=== multiple repositories
+### multiple repositories
 
 most probably you have to work with ldap as one repository and a database as a second repository. for me it worked best to define the `default_repository` for each model in the model itself:
 
@@ -167,13 +167,13 @@ and to let the ldap resources use the ldap respository it is best to bind it to 
     end
   end
 
-=== transactions
+### transactions
 
 the adapter offers a noop transaction, i.e. you can wrap everything into a transaction but the ldap part has no functionality.
 
 *note*: the ldap protocol does not know transactions
 
-=== many-to-many associations
+### many-to-many associations
 
 staying with posix example there the groups has a memberuid attribute BUT unlike with relational databases it can have multiple values. to achieve a relationship with these values the underlying adapter needs to know that this specific attribute needs to be handled differently. for this `multivalue_field` comes into play. the ldap adapter clones the model and places the each memberuid in its own clone.
 
@@ -191,7 +191,7 @@ staying with posix example there the groups has a memberuid attribute BUT unlike
 
     end
 
-=== ldap attributes with many values
+### ldap attributes with many values
 
 let's say your LDAP has multiple email values for a users then you can define your resource class like that using the type *LdapArray* for such multivalue fields
 
@@ -209,7 +209,7 @@ let's say your LDAP has multiple email values for a users then you can define yo
       end
     end
 
-== REQUIREMENTS:
+## REQUIREMENTS:
 
 * slf4r the logging facade
 * net-ldap pure ruby ldap library
@@ -217,11 +217,11 @@ let's say your LDAP has multiple email values for a users then you can define yo
 * logging (optional) if logging via logging is desired
 * log4r (optional) if logging via log4r is desired
 
-== INSTALL:
+## INSTALL:
 
 * sudo gem install dm-ldap-adapter
 
-== LICENSE:
+## LICENSE:
 
 (The MIT License)
 
