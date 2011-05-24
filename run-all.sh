@@ -12,7 +12,7 @@ run_bundler() {
 	echo "-----------------------------------"
 	rm -f Gemfile.lock
 	ln -s Gemfile.lock.$version Gemfile.lock
-	($ruby -S bundle exec spec spec)
+	($ruby -S bundle exec rspec spec)
     done
 }
 
