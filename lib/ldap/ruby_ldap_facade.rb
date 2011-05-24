@@ -85,13 +85,10 @@ module Ldap
     def read_objects(treebase, key_fields, conditions, field_names, order_field = '')      
       
       if !conditions.nil? and conditions.size > 0
-        filter_string = Conditions2Filter.convert(conditions).to_s
+        filter = Conditions2Filter.convert(conditions).to_s
       else
-        filter_string = "(objectclass=*)"
+        filter = "(objectclass=*)"
       end
-
-      filter = filter_string.gsub(/\(\(/, "(")
-      #.gsub(/\)\)/, ")")
 
       result = []
       begin
