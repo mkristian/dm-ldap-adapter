@@ -74,9 +74,10 @@ module Ldap
                end
     end
 
-    def initialize(model, name, options = {})
+    # keep the *args so it works for both DM-1.1.x and DM-1.0.x
+    def initialize(_model = nil, _name = nil, options = {}, *args)
       super
-      
+
       no_writer = options[:writer] == :private || options[:accessor] == :private
       no_reader = options[:reader] == :private || options[:accessor] == :private    
       
