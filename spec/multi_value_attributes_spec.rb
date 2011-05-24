@@ -151,7 +151,6 @@ describe DataMapper.repository(:ldap).adapter.class do
     end
 
     it 'should be able to use multilines with LdapArray' do
-      pending "not working for net-ldap" if DataMapper.repository(:ldap).adapter.ldap.class.to_s == 'Ldap::NetLdapFacade'
       DataMapper.repository(:ldap) do
         @contact.mail = ["email1\nmail2\nmail2\nmail4", "email1"]
         @contact.save
