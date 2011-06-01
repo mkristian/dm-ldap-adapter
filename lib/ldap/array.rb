@@ -78,42 +78,45 @@ module Ldap
     def initialize(_model = nil, _name = nil, options = {}, *args)
       super
 
-      no_writer = options[:writer] == :private || options[:accessor] == :private
-      no_reader = options[:reader] == :private || options[:accessor] == :private    
-      
-      unless no_writer
-        #Creates instance method for writer
-        model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
-          def #{name.to_s}=(v)
-            case v
-            when Ldap::Array
-              v.setup(self, properties[:#{name}])
-            else
-              vv = Ldap::Array.new(self, properties[:#{name}])
-              vv.replace(v || [])
-              v = vv
-            end
-            attribute_set(:#{name}, v)
-          end
-        RUBY
-      end #writer definition
-      
-      unless no_reader
-        #Creates instance method for reader
-        model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
-          def #{name.to_s}
-            v = attribute_get(:#{name})
-            case v
-            when Ldap::Array
-              v.setup(self, properties[:#{name}])
-            else
-              vv = Ldap::Array.new(self, properties[:#{name}])
-              vv.replace(v || [])
-            end
-          end
-        RUBY
-      end #reader definition
-      
+      add_writer(model,name) unless options[:writer] == :private || options[:accessor] == :private
+      add_reader(model,name) unless options[:reader] == :private || options[:accessor] == :private        
     end
+
+    private
+
+    def add_reader(model, name)
+      #Creates instance method for reader
+      model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
+        def #{name}
+         attr_data = attribute_get(:#{name})
+
+         case attr_data
+         when Ldap::Array
+           attr_data.setup(self, properties[:#{name}])
+         else
+           new_ldap_array = Ldap::Array.new(self, properties[:#{name}])
+           new_ldap_array.replace(attr_data || [])
+         end
+        end
+      RUBY
+    end
+
+    def add_writer(model, name)
+      #Creates instance method for writer
+      model.class_eval <<-RUBY, __FILE__, __LINE__ + 1
+        def #{name}=(input)
+          data = case input
+          when Ldap::Array
+            input.setup(self, properties[:#{name}])
+          else
+            new_ldap_array = Ldap::Array.new(self, properties[:#{name}])
+            new_ldap_array.replace(input || [])
+          end
+
+          attribute_set(:#{name}, data)
+        end
+      RUBY
+    end
+
   end
 end
