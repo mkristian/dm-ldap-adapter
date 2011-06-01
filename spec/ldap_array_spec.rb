@@ -9,7 +9,7 @@ class A
   include DataMapper::Resource
 
   property :id, Serial
-  property :list, ::Ldap::LdapArray,            :accessor => :public
+  property :list,         ::Ldap::LdapArray,    :accessor => :public
   property :hidden_list,  ::Ldap::LdapArray,    :accessor => :private
   property :write_list,   ::Ldap::LdapArray,    :reader => :private, :writer => :public
   property :read_list,    ::Ldap::LdapArray,    :reader => :public, :writer => :private
@@ -22,10 +22,7 @@ DataMapper.finalize
 DataMapper.auto_migrate!(:default)
 
 describe Ldap::LdapArray do
-
-  before :each do
-    @resource = A.new
-  end
+  before { @resource = A.new }
 
   it 'should create new with array' do
     @resource.list = ["1", "2"]
