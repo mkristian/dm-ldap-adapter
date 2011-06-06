@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{dm-ldap-adapter}
-  s.version = "0.4.3"
+  s.version = "0.4.4"
 
   s.description = %q{ldap adapter for datamapper which uses either net-ldap or ruby-ldap}
   s.authors = ["mkristian", "xertres"]
