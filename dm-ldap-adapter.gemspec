@@ -7,9 +7,9 @@ Gem::Specification.new do |s|
   s.description = %q{ldap adapter for datamapper which uses either net-ldap or ruby-ldap}
   s.authors = ["mkristian", "xertres"]
   s.email = ["m.kristian@web.de", ""]
-  s.extra_rdoc_files = ["History.txt", "README.txt", "ldap-commands.txt"]
+  s.extra_rdoc_files = ["History.txt", "README.md", "ldap-commands.txt"]
 
-  s.files = ["History.txt", "MIT-LICENSE", "README-example.markdown", "README.txt", "Rakefile", "ldap-commands.txt" ]
+  s.files = ["History.txt", "MIT-LICENSE", "ldap-commands.txt" ] + Dir["README*.md"]
   s.files += Dir['{lib,spec,example}/**/*.rb']
 
   s.homepage = %q{http://github.com/mkristian/dm-ldap-adapter}

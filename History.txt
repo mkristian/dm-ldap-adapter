@@ -1,3 +1,10 @@
+version 0.4.3
+=============
+
+* test several environments: ruby-1.8.7/1.9.2, jruby-1.5.6/1.6.2 (1.8 and 1.9 where possible), DM-1.0.x/1.1.x, net-ldap and ruby-ldap gem as backend. run the specs against all possible combinations.
+
+* improvements with LdapArray properties
+
 version 0.4.2
 =============
 

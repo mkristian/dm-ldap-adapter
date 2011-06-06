@@ -16,10 +16,10 @@ for that reason Gemfile.lock in not on github, so the script run-all.sh
 
 `$ bundle exec spec spec`
 
-or (needs jruby and ruby-maven gem)
+or for some jruby versions (which needs jruby and ruby-maven gem)
 
 `$ rmvn test`
-`$ rmvn test --Djruby.version=1.6.1 -Djruby.switches=--1.9`
+`$ rmvn test --Djruby.versions=1.5.6,1.6.2 -Djruby.18and19
 
 # build gem
 
