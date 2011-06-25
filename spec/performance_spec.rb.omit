@@ -1,6 +1,4 @@
-$LOAD_PATH << File.dirname(__FILE__)
 require 'spec_helper'
-require 'contact'
 
 require 'dm-core/version'
 p DataMapper::VERSION

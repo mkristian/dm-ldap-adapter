@@ -1,11 +1,6 @@
-$LOAD_PATH << Pathname(__FILE__).dirname.parent.expand_path + 'lib'
-
-require 'ldap/array'
-require 'dm-migrations'
-require 'dm-sqlite-adapter'
+require 'spec_helper'
 
 class A
-  
   include DataMapper::Resource
 
   property :id, Serial
