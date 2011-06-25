@@ -1,4 +1,5 @@
 require 'net/ldap'
+require 'slf4r'
 require 'ldap/conditions_2_filter'
 
 module Ldap
