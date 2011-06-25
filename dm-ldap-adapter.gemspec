@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency(%q<dm-sqlite-adapter>, DM_VERSION)
   s.add_development_dependency(%q<dm-migrations>, DM_VERSION)
   s.add_development_dependency(%q<rspec>, ["~> 2.6.0"])
+  s.add_development_dependency(%q<bundler>, ["~> 1.0.15"])
   if defined? JRUBY_VERSION
     s.platform = "java"
     s.add_runtime_dependency(%q<jruby-openssl>, ["0.7.2"])
