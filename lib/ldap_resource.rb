@@ -67,7 +67,7 @@ module DataMapper
           resource.instance_variable_set(:@_repository, repository)
           
           if identity_map
-            resource.persisted_state = Resource::State::Clean.new(resource) unless resource.persisted_state?
+            resource.persistence_state = Resource::PersistenceState::Clean.new(resource) unless resource.persistence_state?
             
             # defer setting the IdentityMap so second level caches can
             # record the state of the resource after loaded
