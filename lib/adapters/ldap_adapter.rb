@@ -28,17 +28,27 @@ module Ldap
       end
       logger.info("using #{@facade}")
       @ldaps = { }
-      auth =  {
-        :method => :simple,
-        :username => options[:bind_name],
-        :password => options[:password]
-      }
       @config = {
         :host => options[:host],
         :port => options[:port].to_i,
-        :auth => auth,
         :base => options[:base]
       }
+
+      if not options[:bind_name].nil? then
+        @config.update({
+          :auth => {
+            :method => :simple,
+            :username => options[:bind_name],
+            :password => options[:password]
+          }
+        })
+      end
+
+      if not options[:adapter_options].nil? then
+        options[:adapter_options].each do |k,v|
+          @config[k.to_sym] = v
+        end
+      end
     end
 
     # puts a LdapFacade into the current thread and executes the
