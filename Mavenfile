@@ -1,1 +1,1 @@
-properties['jruby.plugins.version'] = '0.27.0'
+properties['jruby.plugins.version'] = '0.28.6'

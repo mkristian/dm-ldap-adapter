@@ -10,7 +10,9 @@ run_bundler() {
 	echo "datamapper base version $version"
 	echo "ldap facade $FACADE"
 	echo "-----------------------------------"
+	rm -f Gemfile
 	rm -f Gemfile.lock
+	ln -s Gemfile.$version Gemfile
 	ln -s Gemfile.lock.$version Gemfile.lock
 	($ruby -S bundle exec rspec spec)
     done
@@ -26,21 +28,23 @@ run_maven(){
 	echo "jruby version $jruby_versions"
         echo "datamapper base version $version"
 	echo "-----------------------------------"
+	rm -f Gemfile
 	rm -f Gemfile.lock
-	rm -f Gemfile.pom
+	ln -s Gemfile.$version Gemfile
 	ln -s Gemfile.lock.$version Gemfile.lock
 	rm -rf target/rubygems
-	rmvn spec spec -- -Djruby.18and19 -Djruby.versions=$jruby_versions
+	rm -f Gemfile.pom
+	rmvn spec spec -- -Djruby.18and19 -Djruby.versions=$jruby_versions -Djruby.plugins.version=0.28.6
     done
 }
 
 # iterate over all supported jruby versions
-VERSIONS='1.0.0 1.1.0'
-run_maven 1.5.6,1.6.2 $VERSIONS || exit -1
+VERSIONS='1.0.0 1.1.0 1.2.0'
+run_maven 1.6.2,1.6.3,1.6.4,1.6.5 $VERSIONS || exit -1
 
 # take only the latest (j)ruby version (on ubuntu naming convnetion)
-run_bundler 'jruby --1.8' $VERSIONS || exit -1
-#TODO run_bundler 'jruby --1.9' $VERSIONS || exit -1
+#run_bundler 'jruby --1.8' $VERSIONS || exit -1
+#run_bundler 'jruby --1.9' $VERSIONS || exit -1
 for f in net_ldap ruby_ldap ; do
     export FACADE=$f
     run_bundler 'ruby1.8' $VERSIONS || exit -1

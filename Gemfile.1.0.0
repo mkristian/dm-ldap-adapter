@@ -1,2 +1,3 @@
 source "http://rubygems.org"
+ENV['DM_VERSION'] = '~> 1.0.0'
 gemspec
