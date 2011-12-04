@@ -1,3 +1,19 @@
+version 
+=============
+
+* fixed bug which did count the update result incorrectly
+
+version 0.4.4
+=============
+
+* some less depracted messages
+
+* skipped support for jruby-1.5.6 since rubygems bundled with jruby-complete-.1.5.6.jar does not work with latest gems anymore
+
+* support for datamapper verions 1.2.0
+
+* allow to pass on ldap-adapter(facade) specific parameters with :adapter_options 
+
 version 0.4.3
 =============
 
