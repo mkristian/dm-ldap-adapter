@@ -4,7 +4,15 @@ require 'ldap/array'
 
 module DataMapper
   module Model
-   
+
+    if DataMapper::VERSION =~ /^1.[0-1]/
+      Immutable = Resource::State::Immutable
+      Clean = Resource::State::Clean
+    else
+      Immutable = Resource::PersistenceState::Immutable
+      Clean = Resource::PersistenceState::Clean
+    end
+
       def load(records, query)
         repository      = query.repository
         repository_name = repository.name
@@ -67,13 +75,17 @@ module DataMapper
           resource.instance_variable_set(:@_repository, repository)
           
           if identity_map
-            resource.persistence_state = Resource::PersistenceState::Clean.new(resource) unless resource.persistence_state?
-            
+            if DataMapper::VERSION =~ /^1.[0-1]/
+              resource.persisted_state = Clean.new(resource) unless resource.persisted_state?
+            else               
+              resource.persistence_state = Clean.new(resource) unless resource.persistence_state?
+            end
+
             # defer setting the IdentityMap so second level caches can
             # record the state of the resource after loaded
             identity_map[key_values] = resource
           else
-            resource.persisted_state = Resource::State::Immutable.new(resource)
+            resource.persisted_state = Immutable.new(resource)
           end
           
           resource
