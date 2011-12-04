@@ -187,8 +187,8 @@ module DataMapper
         end.size # just return the number of create resources
       end
 
-      def update(attributes, collection)
-        collection.each do |resource|
+      def update(attributes, resources)
+        resources.select do |resource|
 #puts "update"
 #p resource
           update_resource(resource, attributes)
@@ -298,8 +298,8 @@ module DataMapper
       end
 
       # @see AbstractAdapter#delete
-      def delete(collection)
-        collection.each do |resource|
+      def delete(resource)
+        resource.each do |resource|
           if resource.model.multivalue_field
             multivalue_prop = resource.send(:properties).detect do |prop|
               prop.field.to_sym == resource.model.multivalue_field
