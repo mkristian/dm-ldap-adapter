@@ -49,6 +49,15 @@ describe DataMapper::Adapters::LdapAdapter do
     end
   end
 
+  it 'should return false if save fails' do
+    DataMapper.repository(:ldap) do
+      u = User.first(:login.not => "black")
+      u.age = 'some error'
+      u.save.should be_false
+      #p User.all
+    end
+  end
+
   it 'should be able to get all the objects' do
     DataMapper.repository(:ldap) do
       User.all(:login.like => "b%").should == [@user1, @user2, @user3]
