@@ -8,6 +8,7 @@ module Ldap
     attr_reader :base, :host, :port
 
     def initialize(config)
+      @ldap_config = config
       super(config[:host], config[:port])
       @base = config[:base]
       @port = config[:port]
@@ -183,7 +184,7 @@ module Ldap
     # @param treebase the treebase of the dn or any search
     # @return the complete dn String
     def dn(dn_prefix, treebase)
-      [ dn_prefix, ldap_base(treebase) ].compact.join(",")
+      [ dn_prefix, base(treebase) ].compact.join(",")
     end
 
     # helper to concat the base from the various parts

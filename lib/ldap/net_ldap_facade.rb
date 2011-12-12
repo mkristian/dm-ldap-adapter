@@ -16,6 +16,7 @@ module Ldap
 
     # @param config Hash for the ldap connection
     def initialize(config)
+      @ldap_config = config
       if config.is_a? Hash
         @ldap = Net::LDAP.new( config )
       else
@@ -125,15 +126,12 @@ module Ldap
     # @param dn String for identifying the ldap object
     # @param password String to be used for authenticate to the dn
     def authenticate(dn, password)
-      Net::LDAP.new( { :host => @ldap.host,
-                       :port => @ldap.port,
-                       :auth => {
-                         :method => :simple,
-                         :username => dn,
-                         :password => password
-                       },
-                       :base => @ldap.base
-                     } ).bind
+      config = @ldap_config.merge(:auth => {
+                                    :method => :simple,
+                                    :username => dn,
+                                    :password => password
+                                  })
+      Net::LDAP.new(config).bind
     end
 
     # helper to concat the dn from the various parts
@@ -141,7 +139,7 @@ module Ldap
     # @param treebase the treebase of the dn or any search
     # @return the complete dn String
     def dn(dn_prefix, treebase)
-      [ dn_prefix, ldap_base(treebase) ].compact.join(",")
+      [ dn_prefix, base(treebase) ].compact.join(",")
     end
 
     # helper to concat the base from the various parts
