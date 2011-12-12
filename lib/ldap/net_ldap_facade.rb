@@ -16,6 +16,7 @@ module Ldap
 
     # @param config Hash for the ldap connection
     def initialize(config)
+      @ldap_config = config
       if config.is_a? Hash
         @ldap = Net::LDAP.new( config )
       else
@@ -24,10 +25,9 @@ module Ldap
     end
 
     def retrieve_next_id(treebase, key_field)
-      base = "#{treebase},#{@ldap.base}"
       id_sym = key_field.downcase.to_sym
       max = 0
-      @ldap.search( :base => base,
+      @ldap.search( :base => base(treebase),
                     :attributes => [key_field],
                     :return_result => false ) do |entry|
         n = entry[id_sym].first.to_i
@@ -42,7 +42,6 @@ module Ldap
     # @param props Hash of the ldap attributes of the new ldap object
     # @return nil in case of an error or the new id of the created object
     def create_object(dn_prefix, treebase, key_field, props, silence = false)
-      base = "#{treebase},#{@ldap.base}"
       if @ldap.add( :dn => dn(dn_prefix, treebase),
                     :attributes => props) || @ldap.get_operation_result.code.to_s == "0"
         props[key_field.to_sym]
@@ -66,9 +65,17 @@ module Ldap
     # @param Array of conditions for the search
     # @return Array of Hashes with a name/values pair for each attribute
     def read_objects(treebase, key_fields, conditions, field_names, order_field = nil)
-      result = []
+      searchbase = base(treebase)
       filter = Conditions2Filter.convert(conditions)
-      @ldap.search( :base => "#{treebase},#{@ldap.base}",
+
+      # If there is a :dn in the filter skip everything and look it up
+      if dn = conditions.detect { |c| c[1] == "dn" } then
+        searchbase = dn[2]
+        filter = nil
+      end
+
+      result = []
+      @ldap.search( :base => searchbase,
                     :attributes => field_names,
                     :filter => filter ) do |res|
         mapp = to_map(field_names, res)
@@ -77,7 +84,7 @@ module Ldap
         # TODO maybe make filter which removes this unless
         # TODO move this into the ldap_Adapter to make it more general, so that
         # all field with Integer gets converted, etc
-        result << mapp if key_fields.detect do |key_field|
+        result << mapp if key_fields.all? do |key_field|
           mapp.keys.detect {|k| k.to_s.downcase == key_field.downcase }
         end
       end
@@ -94,6 +101,7 @@ module Ldap
                        :operations => actions ) || @ldap.get_operation_result.code.to_s == "0"
         true
       else
+        puts caller.join("\n")
         logger.warn(ldap_error("update",
                                dn(dn_prefix, treebase) + "\n\t#{actions.inspect}"))
         nil
@@ -118,15 +126,12 @@ module Ldap
     # @param dn String for identifying the ldap object
     # @param password String to be used for authenticate to the dn
     def authenticate(dn, password)
-      Net::LDAP.new( { :host => @ldap.host,
-                       :port => @ldap.port,
-                       :auth => {
-                         :method => :simple,
-                         :username => dn,
-                         :password => password
-                       },
-                       :base => @ldap.base
-                     } ).bind
+      config = @ldap_config.merge(:auth => {
+                                    :method => :simple,
+                                    :username => dn,
+                                    :password => password
+                                  })
+      Net::LDAP.new(config).bind
     end
 
     # helper to concat the dn from the various parts
@@ -134,7 +139,15 @@ module Ldap
     # @param treebase the treebase of the dn or any search
     # @return the complete dn String
     def dn(dn_prefix, treebase)
-      "#{dn_prefix},#{treebase},#{@ldap.base}"
+      [ dn_prefix, base(treebase) ].compact.join(",")
+    end
+
+    # helper to concat the base from the various parts
+    # @param treebase
+    # @param ldap_base the ldap_base defaulting to connection ldap_base
+    # @return the complete base String
+    def base(treebase = nil, ldap_base = @ldap.base)
+      [ treebase, ldap_base ].compact.join(",")
     end
 
     private
