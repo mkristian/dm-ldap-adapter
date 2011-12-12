@@ -75,7 +75,7 @@ module Ldap
         # TODO maybe make filter which removes this unless
         # TODO move this into the ldap_Adapter to make it more general, so that
         # all field with Integer gets converted, etc
-        result << mapp if key_fields.detect do |key_field|
+        result << mapp if key_fields.all? do |key_field|
           mapp.keys.detect {|k| k.to_s.downcase == key_field.downcase }
         end
       end
