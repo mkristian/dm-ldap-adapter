@@ -89,9 +89,17 @@ module Ldap
         filter = "(objectclass=*)"
       end
 
+      searchbase = base(treebase)
+
+      # If there is a :dn in the filter skip everything and look it up
+      if dn = conditions.detect { |c| c[1] == "dn" } then
+        searchbase = dn[2]
+        filter = nil
+      end
+
       result = []
       begin
-      @ldap2.search(base(treebase),
+      @ldap2.search(searchbase,
                     LDAP::LDAP_SCOPE_SUBTREE,
                     filter,
                     field_names, false, 0, 0, order_field) do |res|
