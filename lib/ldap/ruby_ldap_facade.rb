@@ -8,6 +8,7 @@ module Ldap
     attr_reader :base, :host, :port
 
     def initialize(config)
+      @ldap_config = config
       super(config[:host], config[:port])
       @base = config[:base]
       @port = config[:port]
@@ -41,7 +42,7 @@ module Ldap
 
     def retrieve_next_id(treebase, key_field)
       max = 0
-      @ldap2.search("#{treebase},#{@ldap2.base}",
+      @ldap2.search(base(treebase),
                     LDAP::LDAP_SCOPE_SUBTREE,
                     "(objectclass=*)",
                      [key_field]) do |entry|
@@ -57,7 +58,6 @@ module Ldap
     # @param props Hash of the ldap attributes of the new ldap object
     # @return nil in case of an error or the new id of the created object
     def create_object(dn_prefix, treebase, key_field, props, silence = false)
-      base = "#{treebase},#{@ldap2.base}"
       mods = props.collect do |k,v|
         LDAP.mod(LDAP::LDAP_MOD_ADD, k.to_s, v.is_a?(::Array) ? v : [v.to_s] )
       end
@@ -90,9 +90,17 @@ module Ldap
         filter = "(objectclass=*)"
       end
 
+      searchbase = base(treebase)
+
+      # If there is a :dn in the filter skip everything and look it up
+      if dn = conditions.detect { |c| c[1] == "dn" } then
+        searchbase = dn[2]
+        filter = nil
+      end
+
       result = []
       begin
-      @ldap2.search("#{treebase},#{@ldap2.base}",
+      @ldap2.search(searchbase,
                     LDAP::LDAP_SCOPE_SUBTREE,
                     filter,
                     field_names, false, 0, 0, order_field) do |res|
@@ -176,7 +184,15 @@ module Ldap
     # @param treebase the treebase of the dn or any search
     # @return the complete dn String
     def dn(dn_prefix, treebase)
-      "#{dn_prefix},#{treebase},#{@ldap2.base}"
+      [ dn_prefix, base(treebase) ].compact.join(",")
+    end
+
+    # helper to concat the base from the various parts
+    # @param treebase
+    # @param ldap_base the ldap_base defaulting to connection ldap_base
+    # @return the complete base String
+    def base(treebase = nil, ldap_base = @ldap2.base)
+      [ treebase, ldap_base ].compact.join(",")
     end
 
     private
