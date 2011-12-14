@@ -1,7 +1,12 @@
 version 
 =============
 
+version 0.4.5
+=============
+
 * fixed bug which did count the update result incorrectly
+
+* allow to search empty trees and handle DN only queries more useful
 
 version 0.4.4
 =============

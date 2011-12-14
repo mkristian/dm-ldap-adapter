@@ -51,6 +51,7 @@ for f in net_ldap ruby_ldap ; do
     run_bundler 'ruby1.9.1' $VERSIONS || exit -1
 done
 
+git co Gemfile
 rmvn package -- -DskipSpecs
 cp target/dm-ldap-adapter/dm-ldap-adapter-*-java.gem .
 gem build dm-ldap-adapter.gemspec
