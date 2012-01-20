@@ -65,13 +65,14 @@ module Ldap
     # @param Array of conditions for the search
     # @return Array of Hashes with a name/values pair for each attribute
     def read_objects(treebase, key_fields, conditions, field_names, order_field = nil)
-      searchbase = base(treebase)
-      filter = Conditions2Filter.convert(conditions)
 
       # If there is a :dn in the filter skip everything and look it up
       if dn = conditions.detect { |c| c[1] == "dn" } then
         searchbase = dn[2]
         filter = nil
+      else
+        searchbase = base(treebase)
+        filter = Conditions2Filter.convert(conditions)
       end
 
       result = []
