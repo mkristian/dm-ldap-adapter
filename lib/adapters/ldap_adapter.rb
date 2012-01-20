@@ -215,10 +215,14 @@ module DataMapper
           key = prop if prop.serial?
         end
         resource_dup = resource.dup
-        id = ldap.retrieve_next_id(resource.model.treebase,
-                                   key_properties(resource).field)
-        resource_dup.send("#{key_properties(resource).name}=".to_sym, id)
-        props[key_properties(resource).field.to_sym] = "#{id}"
+
+        if props[key_properties(resource).field.to_sym].nil? then
+          id = ldap.retrieve_next_id(resource.model.treebase,
+                                     key_properties(resource).field)
+          resource_dup.send("#{key_properties(resource).name}=".to_sym, id)
+          props[key_properties(resource).field.to_sym] = "#{id}"
+        end
+
         key_value = begin
                       ldap.create_object(resource.model.dn_prefix(resource_dup),
                                          resource.model.treebase,
