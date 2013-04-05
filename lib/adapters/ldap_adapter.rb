@@ -209,8 +209,10 @@ module DataMapper
           value = prop.get!(resource)
           if prop.class == ::Ldap::LdapArray
             props[prop.field.to_sym] = value unless value.nil? or value.size == 0
+          elsif ::DataMapper::Property::Boolean === prop
+            props[prop.field.to_sym] = value ? 'TRUE' : 'FALSE' unless value.nil?
           else
-            props[prop.field.to_sym] = value.to_s unless value.nil?
+            props[prop.field.to_sym] = prop.dump(value).to_s unless value.nil?
           end
           key = prop if prop.serial?
         end
