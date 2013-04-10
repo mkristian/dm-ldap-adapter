@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{dm-ldap-adapter}
-  s.version = "0.4.5"
+  s.version = "0.4.6"
 
   s.description = %q{ldap adapter for datamapper which uses either net-ldap or ruby-ldap}
   s.authors = ["mkristian", "xertres"]
@@ -19,14 +19,13 @@ Gem::Specification.new do |s|
   s.summary = %q{}
 
   DM_VERSION = ["#{ENV['DM_VERSION'] || '~> 1.0'}"] unless defined? DM_VERSION
-  s.add_runtime_dependency(%q<net-ldap>, ["~> 0.2.2"])
+  s.add_runtime_dependency(%q<net-ldap>, ["~> 0.2"])
   s.add_runtime_dependency(%q<slf4r>, ["~> 0.4.2"])
   s.add_runtime_dependency(%q<dm-core>, DM_VERSION)
   s.add_runtime_dependency(%q<dm-transactions>, DM_VERSION)
   s.add_development_dependency(%q<dm-sqlite-adapter>, DM_VERSION)
   s.add_development_dependency(%q<dm-migrations>, DM_VERSION)
-  s.add_development_dependency(%q<rspec>, ["~> 2.6.0"])
-  s.add_development_dependency(%q<bundler>, ["~> 1.0.15"])
+  s.add_development_dependency(%q<rspec>, ["~> 2.6"])
   if defined? JRUBY_VERSION
     s.platform = "java"
     s.add_runtime_dependency(%q<jruby-openssl>, ["0.7.2"])
