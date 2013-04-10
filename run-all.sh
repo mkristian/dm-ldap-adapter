@@ -40,7 +40,7 @@ run_maven(){
 
 # iterate over all supported jruby versions
 VERSIONS='1.0.0 1.1.0 1.2.0'
-run_maven 1.6.2,1.6.3,1.6.4,1.6.5 $VERSIONS || exit -1
+#run_maven 1.6.2,1.6.3,1.6.4,1.6.5 $VERSIONS || exit -1
 
 # take only the latest (j)ruby version (on ubuntu naming convnetion)
 #run_bundler 'jruby --1.8' $VERSIONS || exit -1

@@ -1,10 +1,10 @@
 PATH
   remote: .
   specs:
-    dm-ldap-adapter (0.4.4)
+    dm-ldap-adapter (0.4.5)
       dm-core (~> 1.1.0)
       dm-transactions (~> 1.1.0)
-      net-ldap (~> 0.2.2)
+      net-ldap (~> 0.2)
       slf4r (~> 0.4.2)
 
 GEM
@@ -35,12 +35,12 @@ GEM
       do_jdbc (= 0.10.7)
       jdbc-sqlite3 (>= 3.5.8)
     jdbc-sqlite3 (3.6.14.2.056-java)
-    net-ldap (0.2.2)
+    net-ldap (0.3.1)
     rspec (2.6.0)
       rspec-core (~> 2.6.0)
       rspec-expectations (~> 2.6.0)
       rspec-mocks (~> 2.6.0)
-    rspec-core (2.6.2)
+    rspec-core (2.6.4)
     rspec-expectations (2.6.0)
       diff-lcs (~> 1.1.2)
     rspec-mocks (2.6.0)
@@ -52,9 +52,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.0.15)
   dm-ldap-adapter!
   dm-migrations (~> 1.1.0)
   dm-sqlite-adapter (~> 1.1.0)
-  rspec (~> 2.6.0)
+  rspec (~> 2.6)
   ruby-ldap (~> 0.9.11)
