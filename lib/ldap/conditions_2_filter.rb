@@ -26,7 +26,7 @@ module Ldap
                  when :like
                    Net::LDAP::Filter.eq( cc[1].to_s, cc[2].to_s.gsub(/%/, "*").gsub(/_/, "*").gsub(/\*\*/, "*") )
                  else
-                   logger.error(cc[0].to_s + " needs coding")
+                   @@logger.error(cc[0].to_s + " needs coding")
                  end
             if f
               f = f | ff
@@ -75,7 +75,7 @@ module Ldap
         when :like
           f = Net::LDAP::Filter.eq( cond[1].to_s, c.to_s.gsub(/%/, "*").gsub(/_/, "*").gsub(/\*\*/, "*") )
         else
-          logger.error(cond[0].to_s + " needs coding")
+          @@logger.error(cond[0].to_s + " needs coding")
         end
         filters << f if f
       end
