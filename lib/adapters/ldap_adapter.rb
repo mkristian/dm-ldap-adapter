@@ -280,6 +280,12 @@ module DataMapper
               array_actions
             end
           else
+            value = case value
+                    when NilClass   then nil
+                    when TrueClass  then 'TRUE'
+                    when FalseClass then 'FALSE'
+                    else value
+                    end
             if resource.model.multivalue_field == property.field.to_sym
               if value.nil?
                 actions << [:delete, field, resource.attribute_get(property.name).to_s]
