@@ -44,6 +44,12 @@ module Ldap
         })
       end
 
+     if not options[:encryption].nil? then
+        @config.update(
+        :encryption => {:method=>options[:encryption][:method], :tls_options=>options[:encryption][:tls_options]}
+        )
+      end
+
       if not options[:adapter_options].nil? then
         options[:adapter_options].each do |k,v|
           @config[k.to_sym] = v
