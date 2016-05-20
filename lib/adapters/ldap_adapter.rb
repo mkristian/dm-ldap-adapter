@@ -163,6 +163,8 @@ module DataMapper
                 # assume a single value here !!!
                 val = c.send(:dumped_value)
                 ldap_conditions << [comparator, c.subject.field, val[1, val.size - 2]]
+              elsif c.subject.is_a? ::DataMapper::Property::Boolean
+                ldap_conditions << [comparator, c.subject.field,  c.send(:dumped_value) ? 'TRUE' : 'FALSE']
               else
                 ldap_conditions << [comparator, c.subject.field, c.send(:dumped_value)]
               end
